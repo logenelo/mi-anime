@@ -1,61 +1,65 @@
 import React from 'react';
+import { Box, Typography, Grid, Divider } from '@mui/material';
 import AnimeCard from './AnimeCard';
-import { Anime } from '../types/anime';
-
-// 星期對應中文
-const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
-
-// 將動畫依照 weekday 分組
-function groupByWeekday(animeList: Anime[]) {
-  const groups: { [key: string]: Anime[] } = {};
-  WEEKDAYS.forEach((w) => (groups[w] = []));
-  animeList.forEach((anime) => {
-    const day = anime.weekday;
-    if (groups[day]) {
-      groups[day].push(anime);
-    } else {
-      groups[day] = [anime];
-    }
-  });
-  return groups;
-}
+import type { Anime } from '../types/anime';
 
 type Props = {
   animeList: Anime[];
 };
 
+// 用數字表示星期，0-6 代表週日到週六
+const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'] as const;
+
+const groupByWeekday = (animes: Anime[]) => {
+  const groups: Record<string, Anime[]> = {};
+  // 初始化所有星期的空陣列
+  WEEKDAY_NAMES.forEach((_, index) => {
+    groups[index] = [];
+  });
+  // 將動畫按照星期分組
+  animes.forEach((anime) => {
+    const weekday = anime.weekday;
+    if (groups[weekday]) {
+      groups[weekday].push(anime);
+    }
+  });
+  return groups;
+};
+
 const AnimeList: React.FC<Props> = ({ animeList }) => {
-  const grouped = groupByWeekday(animeList);
+  const groupedAnime = groupByWeekday(animeList);
 
   return (
-    <div>
-      {WEEKDAYS.map((weekday) =>
-        grouped[weekday] && grouped[weekday].length > 0 ? (
-          <div key={weekday} style={{ marginBottom: 32 }}>
-            <h2
-              style={{
-                margin: '16px 0 12px 0',
-                color: '#1976d2',
-                fontSize: 20,
+    <Box sx={{ py: 2 }}>
+      {WEEKDAY_NAMES.map((weekdayName, index) => {
+        const animes = groupedAnime[index];
+        if (!animes?.length) return null;
+
+        return (
+          <Box key={index} sx={{ mb: 4 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 1,
+                color: 'primary.main',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              星期{weekday}
-            </h2>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: 20,
-              }}
-            >
-              {grouped[weekday].map((anime) => (
-                <AnimeCard key={anime.id} anime={anime} />
+              星期{weekdayName}
+            </Typography>
+            <Grid container spacing={1}>
+              {animes.map((anime) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={anime.id}>
+                  <AnimeCard anime={anime} />
+                </Grid>
               ))}
-            </div>
-          </div>
-        ) : null,
-      )}
-    </div>
+            </Grid>
+          </Box>
+        );
+      })}
+    </Box>
   );
 };
 

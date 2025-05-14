@@ -1,73 +1,96 @@
 import React from 'react';
-import { Anime } from '../types/anime';
+import {
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+} from '@mui/material';
+import type { Anime } from '../types/anime';
+import { getWeekdayLabel } from '../services/animeHelper';
 
 type AnimeCardProps = {
   anime: Anime;
 };
 
 const AnimeCard: React.FC<AnimeCardProps> = ({ anime }) => (
-  <div
-    style={{
+  <Card
+    elevation={2}
+    sx={{
       display: 'flex',
-      alignItems: 'flex-start',
-      border: '1px solid #e0e0e0',
-      borderRadius: 14,
-      background: '#fff',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-      maxWidth: 480,
-      transition: 'box-shadow 0.2s',
+      borderRadius: 2,
       overflow: 'hidden',
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: (theme) => theme.shadows[8],
+      },
     }}
   >
-    <img
-      src={anime.cover}
-      alt={anime.title}
-      width={120}
-      height={'100%'}
-      style={{
-        minHeight: '100%',
-        marginRight: 0,
+    <CardMedia
+      component="img"
+      sx={{
+        width: 100,
         objectFit: 'cover',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-        background: '#f0f0f0',
+        borderRadius: '8px 0 0 8px',
       }}
+      image={anime.cover}
+      alt={anime.title}
     />
-    <div style={{ flex: 1, padding: 16 }}>
-      <h2 style={{ margin: '0 0 10px 0', fontSize: 22, color: '#222' }}>
+    <CardContent sx={{ flex: 1, p: 2 }}>
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{
+          fontSize: '1.1rem',
+          fontWeight: 'bold',
+          mb: 1,
+          lineHeight: 1.2,
+        }}
+      >
         {anime.title}
-      </h2>
-      <div style={{ marginBottom: 6, color: '#666', fontSize: 15 }}>
-        <span style={{ fontWeight: 500 }}>開播日期：</span>
-        {anime.startDate}
-      </div>
-      <div style={{ marginBottom: 6, color: '#666', fontSize: 15 }}>
-        <span style={{ fontWeight: 500 }}>每週播出：</span>
-        <span
-          style={{
-            background: '#e3f2fd',
-            borderRadius: 4,
-            padding: '2px 8px',
-            marginLeft: 4,
-          }}
+      </Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ display: 'flex', gap: 1 }}
         >
-          {anime.weekday}
-        </span>
-      </div>
-      <div style={{ color: '#666', fontSize: 15 }}>
-        <span style={{ fontWeight: 500 }}>觀看平台：</span>
-        <span
-          style={{
-            background: '#fffde7',
-            borderRadius: 4,
-            padding: '2px 8px',
-            marginLeft: 4,
-          }}
+          <span>開播日期：</span>
+          <span>{anime.startDate}</span>
+        </Typography>
+        <Typography variant="body2" sx={{ display: 'flex', gap: 1 }}>
+          <span>每週播出：</span>
+          <Chip
+            label={`${getWeekdayLabel(anime.weekday)}`}
+            size="small"
+            sx={{
+              backgroundColor: 'primary.light',
+              fontSize: '0.75rem',
+            }}
+          />
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ display: 'flex', gap: 1 }}
         >
-          {anime.platform}
-        </span>
-      </div>
-    </div>
-  </div>
+          <span>觀看平台：</span>
+          <Chip
+            label={anime.platform}
+            size="small"
+            sx={{
+              height: '20px',
+              backgroundColor: 'secondary.light',
+              color: 'secondary.dark',
+              fontSize: '0.75rem',
+            }}
+          />
+        </Typography>
+      </Box>
+    </CardContent>
+  </Card>
 );
 
 export default AnimeCard;

@@ -1,61 +1,73 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import BottomNavigation from '@mui/material/BottomNavigation';
+import BottomNavigationAction from '@mui/material/BottomNavigationAction';
+import Paper from '@mui/material/Paper';
+import HomeIcon from '@mui/icons-material/Home';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import StarIcon from '@mui/icons-material/Star';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const navItems = [
-  { key: 'home', label: 'Home', icon: '🏠', path: '/' },
-  { key: 'calendar', label: 'Calendar', icon: '📅', path: '/calendar' },
-  { key: 'favorites', label: 'My Favor', icon: '⭐', path: '/favorites' },
-  { key: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
+  { key: 'home', label: '首頁', icon: <HomeIcon />, path: '/' },
+  {
+    key: 'calendar',
+    label: '行事曆',
+    icon: <CalendarMonthIcon />,
+    path: '/calendar',
+  },
+  { key: 'favorites', label: '收藏', icon: <StarIcon />, path: '/favorites' },
+  { key: 'settings', label: '設定', icon: <SettingsIcon />, path: '/settings' },
 ];
 
 const BottomNavBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine current tab from path
-  const current = navItems.find((item) =>
+  // 根據當前路徑決定選中的 tab
+  const currentIndex = navItems.findIndex((item) =>
     item.path === '/'
       ? location.pathname === '/'
       : location.pathname.startsWith(item.path),
-  )?.key;
+  );
 
   return (
-    <nav
-      style={{
+    <Paper
+      sx={{
         position: 'fixed',
         bottom: 0,
         left: 0,
-        width: '100%',
-        height: 56,
-        background: '#fff',
-        borderTop: '1px solid #eee',
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
+        right: 0,
         zIndex: 100,
+        borderTop: '1.5px solid #e0e0e0',
+        boxShadow: '0 0 16px 0 rgba(0,0,0,0.06)',
       }}
+      elevation={3}
     >
-      {navItems.map((item) => (
-        <button
-          key={item.key}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: current === item.key ? '#1976d2' : '#888',
-            fontWeight: current === item.key ? 'bold' : 'normal',
-            fontSize: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            cursor: 'pointer',
-          }}
-          onClick={() => navigate(item.path)}
-        >
-          <span style={{ fontSize: 22 }}>{item.icon}</span>
-          {item.label}
-        </button>
-      ))}
-    </nav>
+      <BottomNavigation
+        value={currentIndex}
+        onChange={(_, newValue) => {
+          navigate(navItems[newValue].path);
+        }}
+        sx={{
+          height: 64,
+        }}
+      >
+        {navItems.map((item) => (
+          <BottomNavigationAction
+            key={item.key}
+            label={item.label}
+            icon={item.icon}
+            value={navItems.findIndex((i) => i.key === item.key)}
+            sx={{
+              '&.Mui-selected': {
+                color: '#1976d2',
+              },
+            }}
+          />
+        ))}
+      </BottomNavigation>
+    </Paper>
   );
 };
 
