@@ -1,96 +1,78 @@
 import React from 'react';
-import {
-  Card,
-  CardMedia,
-  CardContent,
-  Typography,
-  Box,
-  Chip,
-} from '@mui/material';
+import { Card, CardMedia, Typography, Stack, Box, Chip } from '@mui/material';
 import type { Anime } from '../types/anime';
-import { getWeekdayLabel } from '../services/animeHelper';
+import FavoriteButton from './FavoriteButton';
 
-type AnimeCardProps = {
+const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
+
+interface AnimeCardProps {
   anime: Anime;
-};
+  variant?: 'grid' | 'list';
+}
 
-const AnimeCard: React.FC<AnimeCardProps> = ({ anime }) => (
-  <Card
-    elevation={2}
-    sx={{
-      display: 'flex',
-      borderRadius: 2,
-      overflow: 'hidden',
-      transition: 'all 0.2s ease-in-out',
-      '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: (theme) => theme.shadows[8],
-      },
-    }}
-  >
-    <CardMedia
-      component="img"
+const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
+  const isGrid = variant === 'grid';
+
+  return (
+    <Card
+      elevation={2}
       sx={{
-        width: 100,
-        objectFit: 'cover',
-        borderRadius: '8px 0 0 8px',
+        display: 'flex',
+        borderRadius: 2,
+        height: '100%',
+        flexDirection: isGrid ? 'column' : 'row',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: (theme) => theme.shadows[8],
+        },
       }}
-      image={anime.cover}
-      alt={anime.title}
-    />
-    <CardContent sx={{ flex: 1, p: 2 }}>
-      <Typography
-        variant="h6"
-        gutterBottom
+    >
+      <CardMedia
+        component="img"
         sx={{
-          fontSize: '1.1rem',
-          fontWeight: 'bold',
-          mb: 1,
-          lineHeight: 1.2,
+          width: isGrid ? '100%' : 120,
+          height: isGrid ? 160 : '100%',
+          objectFit: 'cover',
         }}
-      >
-        {anime.title}
-      </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        image={anime.cover}
+        alt={anime.title}
+      />
+      <Box sx={{ flex: 1, p: isGrid ? 2 : 1, position: 'relative' }}>
         <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ display: 'flex', gap: 1 }}
+          variant="h6"
+          sx={{
+            fontSize: '1.1rem',
+            fontWeight: 'bold',
+            mb: 1,
+            pr: 4,
+          }}
         >
-          <span>開播日期：</span>
-          <span>{anime.startDate}</span>
+          {anime.title} <FavoriteButton animeId={anime.id} />
         </Typography>
-        <Typography variant="body2" sx={{ display: 'flex', gap: 1 }}>
-          <span>每週播出：</span>
-          <Chip
-            label={`${getWeekdayLabel(anime.weekday)}`}
-            size="small"
-            sx={{
-              backgroundColor: 'primary.light',
-              fontSize: '0.75rem',
-            }}
-          />
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ display: 'flex', gap: 1 }}
-        >
-          <span>觀看平台：</span>
-          <Chip
-            label={anime.platform}
-            size="small"
-            sx={{
-              height: '20px',
-              backgroundColor: 'secondary.light',
-              color: 'secondary.dark',
-              fontSize: '0.75rem',
-            }}
-          />
-        </Typography>
+        <Stack>
+          <Stack direction="row" alignItems="center">
+            <Typography variant="body2" color="text.secondary">
+              播出時間：
+            </Typography>
+            <Chip
+              size="small"
+              color="primary"
+              label={WEEKDAY_NAMES[anime.weekday]}
+            />
+          </Stack>
+
+          <Typography variant="body2" color="text.secondary">
+            開播日期：{anime.startDate}
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary">
+            播出平台：{anime.platform}
+          </Typography>
+        </Stack>
       </Box>
-    </CardContent>
-  </Card>
-);
+    </Card>
+  );
+};
 
 export default AnimeCard;

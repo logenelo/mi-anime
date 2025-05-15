@@ -11,6 +11,9 @@ const Main: React.FC<MainProps> = ({ children }) => {
   const [bgUrl, setBgUrl] = useState<string>(() => {
     return localStorage.getItem('anime_bg') || DefaultBG;
   });
+  const [blur, setBlur] = useState<number>(() => {
+    return parseInt(localStorage.getItem('blur_amount') || '0', 10);
+  });
   const [targetTransform, setTargetTransform] = useState<[number, number]>([
     0, 0,
   ]);
@@ -22,8 +25,8 @@ const Main: React.FC<MainProps> = ({ children }) => {
   useEffect(() => {
     const { innerWidth, innerHeight } = window;
     // 預設為畫面中央
-    let x = 0,
-      y = 0;
+    let x = 0;
+    let y = 0;
     if (typeof window !== 'undefined') {
       // 取得目前滑鼠位置，若無則為中央
       x = (window as any).mouseX ?? innerWidth / 2;
@@ -52,18 +55,38 @@ const Main: React.FC<MainProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    // 監聽設定頁面可能變更模糊度
+    const onStorage = () => {
+      const stored = localStorage.getItem('user_preferences');
+      let blurAmount = 0;
+      if (stored) {
+        try {
+          const prefs = JSON.parse(stored);
+          blurAmount = prefs.blurAmount || 0;
+        } catch (e) {
+          blurAmount = 0;
+        }
+      }
+      setBlur(blurAmount);
+    };
+    window.addEventListener('storagePreferences', onStorage);
+    return () => window.removeEventListener('storagePreferences', onStorage);
+  }, []);
+
+  useEffect(() => {
     const moveSpeed = 0.04; // 動畫速度
     const minDelta = 0.5; // 最小移動閾值，單位: px
     const animate = () => {
-      const current = currentRef.current;
+      const { current } = currentRef;
       const dx = targetTransform[0] - current[0];
       const dy = targetTransform[1] - current[1];
       // 若移動距離很小則直接停止動畫
       if (Math.abs(dx) < minDelta && Math.abs(dy) < minDelta) {
-        current[0] = targetTransform[0];
-        current[1] = targetTransform[1];
+        [current[0], current[1]] = targetTransform;
         setBgTransform(`translate(${current[0]}px, ${current[1]}px)`);
-        animationRef.current && cancelAnimationFrame(animationRef.current);
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
         return;
       }
       current[0] += dx * moveSpeed;
@@ -73,7 +96,9 @@ const Main: React.FC<MainProps> = ({ children }) => {
     };
     animationRef.current = requestAnimationFrame(animate);
     return () => {
-      animationRef.current && cancelAnimationFrame(animationRef.current);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
     // eslint-disable-next-line
   }, [targetTransform]);
@@ -105,15 +130,19 @@ const Main: React.FC<MainProps> = ({ children }) => {
     >
       <Box
         sx={{
-          position: 'absolute',
-          inset: 0,
+          position: 'fixed',
+          inset: '-20vh',
           zIndex: 0,
-          width: '120vw',
-          height: '120vh',
-          left: '-10vw',
-          top: '-10vh',
-          background: `url('${bgUrl}') center center / cover no-repeat`,
           transition: 'background-image 0.5s ease-in-out',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            transform: 'scale(1.2)',
+          },
+        }}
+        style={{
+          background: `url('${bgUrl}') center center / cover no-repeat`,
           transform: bgTransform,
         }}
       />
@@ -123,24 +152,33 @@ const Main: React.FC<MainProps> = ({ children }) => {
           zIndex: 1,
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
           height: '100vh',
           bgcolor: 'rgba(255,255,255,0.70)',
-          backdropFilter: 'blur(2px)',
+          backdropFilter: `blur(${blur}px)`,
+          WebkitBackdropFilter: `blur(${blur}px)`,
         }}
       >
-        <Container
-          maxWidth="lg"
-          sx={{
-            flex: 1,
-            overflowY: 'auto',
-            pb: 8,
-            pt: 2,
-            px: 2,
-          }}
+        <Box
+          width={1}
+          flex={1}
+          display="flex"
+          mb={8}
+          sx={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
         >
-          {children}
-        </Container>
+          <Container
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              flex: 1,
+              pb: 8,
+              pt: 2,
+              px: { xs: 1, sm: 2 },
+            }}
+          >
+            {children}
+          </Container>
+        </Box>
+
         <BottomNavBar />
       </Box>
     </Box>
