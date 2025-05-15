@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -152,7 +152,9 @@ const Settings: React.FC = () => {
 
   // Add lazy loading for images
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
-
+  useEffect(() => {
+    errorMsg && console.log(errorMsg);
+  }, [errorMsg]);
   return (
     <Box sx={{ p: 2 }}>
       {/* Theme Settings */}
