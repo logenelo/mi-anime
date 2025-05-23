@@ -92,8 +92,10 @@ export class Router {
     for (const route of routes) {
       if (this._pathToRegex(route.path).test(url.pathname)) {
         const params = this._getPathParams(route.path, url.pathname);
-        request.params = params;
-        
+        if (Object.keys(params).length) {
+          request.params = params;
+        }
+       
         try {
           const response = await route.handler(request, env, ctx);
           return this.createCorsResponse(response);

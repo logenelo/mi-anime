@@ -1,13 +1,14 @@
 import { Router } from './router';
 import {
-  getAnime,
   listAnimes,
   createAnimes,
   updateAnime,
   deleteAnime,
   listAnimesByIds,
   getAnimesByYearAndSeason,
-  crawlSeasonAnimes
+  crawlSeasonAnimes,
+  deleteAnimes,
+  getAnimeById
 } from './handlers/anime';
 
 export interface Env {
@@ -17,14 +18,16 @@ export interface Env {
 const router = new Router();
 
 router
-  .get('/anime/:id', getAnime)
   .get('/anime', listAnimes)
-  .get('/anime/ids', listAnimesByIds)
   .get('/anime/:year/:season', getAnimesByYearAndSeason)
-  .post('/anime/crawl', crawlSeasonAnimes)
+  .get('/anime/:id', getAnimeById)
   .post('/anime', createAnimes)
+  .post('/anime/crawl', crawlSeasonAnimes)
+  .post('/anime/ids', listAnimesByIds)
   .put('/anime/:id', updateAnime)
-  .delete('/anime/:id', deleteAnime);
+  .delete('/anime/:id', deleteAnime)
+  //.delete('/anime', deleteAnimes);
+  
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

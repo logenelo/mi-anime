@@ -42,24 +42,17 @@ export const animesCrawler = async (year:number, season:number) => {
 }
 
 
-export async function getAnime(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const id = new URL(request.url).pathname.split('/')[2];
-  const anime = await env.ANIME.get(id);
-  
-  if (!anime) {
-    return new Response('Anime not found', { status: 404 });
-  }
-  
-  return new Response(anime, {
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
 
 export async function listAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const list = await env.ANIME.list();
-  const animes = await Promise.all(
+  
+  const animeStrings = await Promise.all(
     list.keys.map(key => env.ANIME.get(key.name))
   );
+
+  const animes: AnimeData[] = animeStrings
+    .filter((anime): anime is string => anime !== null)
+    .map(anime => JSON.parse(anime));
   
   const response = {
     statusCode:200,
@@ -70,17 +63,38 @@ export async function listAnimes(request: Request, env: Env, ctx: ExecutionConte
   });
 }
 
+export async function getAnimeById(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const id = new URL(request.url).pathname.split('/')[2];
+  const anime = await env.ANIME.get(id);
+  
+  if (!anime) {
+    return new Response('Anime not found', { status: 404 });
+  }
+  
+  const response = {
+    statusCode:200,
+    anime:JSON.parse(anime)
+  }
+  return new Response(JSON.stringify(response), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 export async function listAnimesByIds(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  //const { ids } = await request.json()
-  const ids:[] = [];
-  console.log(request)
+  const {ids}: { ids:string[] } = await request.json(); 
+  console.log(ids)
   if (!Array.isArray(ids)) {
     return new Response('Invalid body format', { status: 400 });
   }
 
-  const animes = await Promise.all(
+  const animeStrings = await Promise.all(
     ids.map(id => env.ANIME.get(id))
   );
+
+  const animes: AnimeData[] = animeStrings
+    .filter((anime): anime is string => anime !== null)
+    .map(anime => JSON.parse(anime))
+    .reverse();
 
   const response = {
     statusCode:200,
@@ -92,9 +106,13 @@ export async function listAnimesByIds(request: Request, env: Env, ctx: Execution
 }
 
 export async function getAnimesByYearAndSeason(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  //console.log(request)
-  const { year, season } = request.params; 
   
+  const { year, season } = request.params; 
+  console.log(year, season)
+  if (!year || !season || !Number(year) || !Number(season)) {
+    return new Response('Invalid body format', { status: 400 });
+  }
+
   const list = await env.ANIME.list();
   const animeStrings = await Promise.all(
     list.keys.map(key => env.ANIME.get(key.name))
@@ -104,7 +122,10 @@ export async function getAnimesByYearAndSeason(request: Request, env: Env, ctx: 
     .filter((anime): anime is string => anime !== null)
     .map(anime => JSON.parse(anime));
 
-  const filteredAnimes = animes.filter((anime: AnimeData) => anime.year === year && anime.season === season);
+
+
+
+  const filteredAnimes = animes.filter((anime: AnimeData) => anime.year == Number(year) && anime.season == Number(season));
 
   const response = {
     statusCode:200,
@@ -117,13 +138,10 @@ export async function getAnimesByYearAndSeason(request: Request, env: Env, ctx: 
 
 export async function crawlSeasonAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const {year, season}: { year: number, season: number } = await request.json(); 
-  console.log(request.json());
+  
   const html = await animesCrawler(year, season);
-  const response = {
-    statusCode:200,
-    body: html
-  }
-  return new Response(JSON.stringify(response), {
+  
+  return new Response(JSON.stringify(html), {
     headers: { 'Content-Type': 'application/json' }
   });
 }
@@ -135,17 +153,31 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
     return new Response('Invalid body format', { status: 400 });
   }
 
-  const results = await Promise.all(newAnimes.map(async (newAnime) => {
-    if (!newAnime.id) {
-      newAnime.id = crypto.randomUUID();
+   const results = await Promise.all(newAnimes.map(async (anime) => {
+    // Check if anime already exists
+    if (anime.id) {
+      const existing = await env.ANIME.get(anime.id);
+      if (existing) {
+        // Update existing record
+        const updatedAnime = {
+          ...JSON.parse(existing),
+          ...anime,
+          updatedAt: new Date().getTime()
+        };
+        await env.ANIME.put(anime.id, JSON.stringify(updatedAnime));
+        return { ...updatedAnime, updated: true };
+      }
     }
-    
-    await env.ANIME.put(newAnime.id, JSON.stringify({
-      ...newAnime,
-      createdAt: new Date().getTime(), 
+
+    // Create new record
+    const newAnime = {
+      ...anime,
+      id: anime.id || crypto.randomUUID(),
+      createdAt: new Date().getTime(),
       updatedAt: new Date().getTime()
-    }));
-    return newAnime;
+    };
+    await env.ANIME.put(newAnime.id, JSON.stringify(newAnime));
+    return { ...newAnime, created: true };
   }));
 
   const response = {
@@ -185,4 +217,15 @@ export async function deleteAnime(request: Request, env: Env, ctx: ExecutionCont
   
   await env.ANIME.delete(id);
   return new Response(null, { status: 204 });
+}
+
+export async function deleteAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const list = await env.ANIME.list();
+  const deleteAll = await Promise.all(
+    list.keys.map(key => env.ANIME.delete(key.name))
+  );
+  
+  return new Response(JSON.stringify({
+    message: 'Deleted ' + deleteAll.length + ' animes'
+  }), { status: 204 });
 }

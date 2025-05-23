@@ -15,6 +15,7 @@ module.exports = {
     'no-unused-expressions': 'warn',
     '@typescript-eslint/no-shadow': 'error',
     '@typescript-eslint/no-unused-vars': 'error',
+
     'react/function-component-definition': 'off',
     'react/no-array-index-key': 'off',
     'react/require-default-props': 'off',

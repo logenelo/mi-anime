@@ -12,7 +12,24 @@ const Home: React.FC = () => {
     try {
       getSeasonAnimes().then((resp) => {
         if (resp.statusCode === 200) {
-          setAnimeList(resp.animes);
+          const date = new Date();
+          const currentYear = date.getFullYear();
+          const currentSeason = Math.floor((date.getMonth() + 1) / 3) as number;
+          const seasonCode = currentYear * 100 + currentSeason;
+
+          const filteredList = resp.animes
+            .map((item: Anime) => {
+              const itemDate = new Date(Number(item.startDate));
+              const year = itemDate.getFullYear();
+              const season = Math.floor(
+                (itemDate.getMonth() + 1) / 3,
+              ) as number;
+              return year * 100 + season < seasonCode
+                ? { ...item, isContin: true }
+                : item;
+            })
+            .sort((a: Anime, b: Anime) => b.startDate - a.startDate);
+          setAnimeList(filteredList);
         } else {
           console.error('Error fetching anime data:', resp.message);
         }

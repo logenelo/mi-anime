@@ -11,7 +11,7 @@ import {
 import GridViewIcon from '@mui/icons-material/GridView';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import AnimeCard from './AnimeCard';
-import type { Anime } from '../types/anime';
+import { type Anime } from '../types/anime';
 import { WEEKDAY_NAMES } from '../services/animeHelper';
 import useCustomSetting from '../hooks/useCustomSetting';
 import { Layout } from '../types/setting';
@@ -33,6 +33,9 @@ const toggleButtonStyles = {
     },
   },
 };
+
+// 每個星期的顏色
+
 const AnimeList: React.FC<Props> = ({ animeList }) => {
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
   const [userPreferences, setUserPreferences] = useCustomSetting();
@@ -173,9 +176,9 @@ const AnimeList: React.FC<Props> = ({ animeList }) => {
           <Box key={originalIndex} sx={{ mb: 4 }}>
             <Typography
               variant="h6"
+              color="text.seconadary"
               sx={{
                 mb: 2,
-                color: i === 0 ? 'secondary.main' : 'primary.main',
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
@@ -186,8 +189,10 @@ const AnimeList: React.FC<Props> = ({ animeList }) => {
                 <Chip
                   label="今天"
                   size="small"
-                  color="secondary"
-                  sx={{ ml: 1 }}
+                  color="primary"
+                  sx={{
+                    ml: 1,
+                  }}
                 />
               )}
             </Typography>
