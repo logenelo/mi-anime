@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Box, Container } from '@mui/material';
+import { Box, Container, useTheme } from '@mui/material';
 import BottomNavBar from './BottomNavBar';
 import DefaultBG from '../../../assets/background/background-1.jpg';
 import AnimeDetailDrawer from './AnimeDetailDrawer';
@@ -9,6 +9,9 @@ type MainProps = {
 };
 
 const Main: React.FC<MainProps> = ({ children }) => {
+  const theme = useTheme();
+  const { mode } = theme.palette;
+
   const [bgUrl, setBgUrl] = useState<string>(() => {
     return localStorage.getItem('anime_bg') || DefaultBG;
   });
@@ -164,7 +167,8 @@ const Main: React.FC<MainProps> = ({ children }) => {
             display: 'flex',
             flexDirection: 'column',
             height: '100vh',
-            bgcolor: 'rgba(255,255,255,0.70)',
+            bgcolor:
+              mode === 'dark' ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.70)',
             backdropFilter: `blur(${blur}px)`,
             WebkitBackdropFilter: `blur(${blur}px)`,
             transition: 'backdrop-filter 0.3s ease-in-out',

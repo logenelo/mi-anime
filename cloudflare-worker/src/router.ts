@@ -101,7 +101,7 @@ export class Router {
           return this.createCorsResponse(response);
         } catch (error) {
           return this.createCorsResponse(
-            new Response('Internal Server Error', { status: 500 })
+            new Response('Internal Server Error:' + error, { status: 500 })
           );
         }
       }

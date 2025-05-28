@@ -52,7 +52,10 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
               fontWeight: 'bold',
             }}
           >
-            {anime.title} <FavoriteButton animeId={anime.id} />
+            {anime.title}{' '}
+            <Box component="span" display="inline-flex">
+              <FavoriteButton animeId={anime.id} />
+            </Box>
           </Typography>
         </Box>
       </>
@@ -79,20 +82,19 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
             position: 'relative',
           }}
         >
-          <Stack direction="row" spacing="2px" mb={1} alignItems="flex-start">
+          <Stack direction="row" mb={1}>
             <Typography
               variant="h6"
-              textAlign="justify"
               sx={{
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
               }}
             >
-              {anime.title}
+              {anime.title}{' '}
+              <Box component="span" display="inline-flex">
+                <FavoriteButton animeId={anime.id} />
+              </Box>
             </Typography>
-            <Box mt={1}>
-              <FavoriteButton animeId={anime.id} />
-            </Box>
           </Stack>
           <Stack>
             <Stack direction="row" alignItems="center">

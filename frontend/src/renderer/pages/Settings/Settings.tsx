@@ -14,6 +14,8 @@ import {
   Slider,
   RadioGroup,
   Radio,
+  useTheme,
+  Grid,
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import PaletteIcon from '@mui/icons-material/Palette';
@@ -23,7 +25,8 @@ import DefaultBG from '../../../../assets/background/background-1.jpg';
 import ImageCard from './components/ImageCard';
 import { compressImage } from '../../utils/imageUtils';
 import useCustomSetting from '../../hooks/useCustomSetting';
-import { UserPreferences } from '../../types/setting';
+import { ThemeMode, UserPreferences } from '../../types/setting';
+import { allPalette } from '../../theme/palette';
 
 interface CustomBackground {
   id: string;
@@ -32,6 +35,10 @@ interface CustomBackground {
 }
 
 const Settings: React.FC = () => {
+  const theme = useTheme();
+  const { themeToggler, colorToggler } = theme;
+  const { mode } = theme.palette;
+
   const [backgrounds, setBackgrounds] = useState<CustomBackground[]>(() => {
     try {
       const stored = localStorage.getItem('custom_backgrounds');
@@ -168,6 +175,57 @@ const Settings: React.FC = () => {
           <Stack spacing={3}>
             <Box>
               <Typography variant="subtitle2" gutterBottom>
+                主題顏色
+              </Typography>
+              <Box
+                display="grid"
+                mb={2}
+                gap={1}
+                sx={{
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                }}
+              >
+                {allPalette.map((palette) => (
+                  <Card
+                    variant="outlined"
+                    key={palette.value}
+                    onClick={() => {
+                      colorToggler(palette.value);
+                      setPreferences({
+                        ...preferences,
+                        themeColor: palette.value,
+                      });
+                    }}
+                    sx={{
+                      p: 1.5,
+                      cursor: 'pointer',
+                      boxSizing: 'content-box',
+                      outline:
+                        preferences.themeColor === palette.value
+                          ? '2px solid ' + theme.palette.primary.main
+                          : 'none',
+                    }}
+                  >
+                    <Typography color="textPrimary">{palette.name}</Typography>
+                    <Box
+                      display="grid"
+                      gridTemplateColumns="2fr 1fr"
+                      gap={1}
+                      height={100}
+                    >
+                      <Box
+                        borderRadius={1}
+                        sx={{ bgcolor: palette[mode].primary.main }}
+                      />
+                      <Box
+                        borderRadius={1}
+                        sx={{ bgcolor: palette[mode].secondary.main }}
+                      />
+                    </Box>
+                  </Card>
+                ))}
+              </Box>
+              <Typography variant="subtitle2" gutterBottom>
                 主題設定
               </Typography>
               <RadioGroup
@@ -175,11 +233,10 @@ const Settings: React.FC = () => {
                 name="theme"
                 aria-label="theme"
                 value={preferences.theme}
-                onChange={(e) =>
-                  updatePreferences({
-                    theme: e.target.value as UserPreferences['theme'],
-                  })
-                }
+                onChange={(e) => {
+                  themeToggler(e.target.value as ThemeMode);
+                  setPreferences({ theme: e.target.value as ThemeMode });
+                }}
               >
                 <FormControlLabel
                   value="light"

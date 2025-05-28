@@ -123,6 +123,7 @@ const AnimeList: React.FC<Props> = ({ animeList }) => {
                 color="primary"
                 sx={{
                   minWidth: 40,
+                  fontWeight: 'bold',
                   ...toggleButtonStyles,
                 }}
               >
@@ -172,7 +173,7 @@ const AnimeList: React.FC<Props> = ({ animeList }) => {
           <Box key={originalIndex} sx={{ mb: 4 }}>
             <Typography
               variant="h6"
-              color="text.seconadary"
+              color="textPrimary"
               sx={{
                 mb: 2,
                 fontWeight: 'bold',

@@ -1,7 +1,10 @@
 export type Layout = 'grid' | 'list';
 
+export type ThemeMode = 'light' | 'dark';
+
 export interface UserPreferences {
-  theme: 'light' | 'dark';
+  theme: ThemeMode
+  themeColor:string
   blurAmount: number;
   cardLayout: Layout;
 }

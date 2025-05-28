@@ -41,7 +41,7 @@ const Home: React.FC = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+      <Typography variant="h4" color="textPrimary" sx={{ fontWeight: 'bold' }}>
         本季度新番列表
       </Typography>
       <AnimeList animeList={animeList} />

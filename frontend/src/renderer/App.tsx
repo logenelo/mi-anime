@@ -13,20 +13,67 @@ import './App.css';
 import { initDB } from 'react-indexed-db-hook';
 import { DBConfig } from './DBConfig';
 import { DetailProvider } from './contexts/AnimeDetailContext';
-import AnimeDetailDrawer from './components/AnimeDetailDrawer';
+import { ThemeProvider } from '@mui/material/styles';
+import useCustomSetting from './hooks/useCustomSetting';
+import { ThemeMode } from './types/setting';
+import getTheme from './theme';
 
 initDB(DBConfig);
 
+export const useDarkMode = (): [
+  ThemeMode,
+  string,
+  (mode: ThemeMode) => void,
+  (color: string) => void,
+  boolean,
+] => {
+  const [themeMode, setTheme] = React.useState<ThemeMode>('light');
+  const [themeColor, setThemeColor] = React.useState<string>('Bocchi');
+  const [mountedComponent, setMountedComponent] = React.useState(false);
+  const [customSetting, setCustomSetting] = useCustomSetting();
+
+  const themeToggler = (mode: ThemeMode): void => {
+    setCustomSetting({ theme: mode });
+    setTheme(mode);
+  };
+  const colorToggler = (color: string): void => {
+    setCustomSetting({ themeColor: color });
+    setThemeColor(color);
+  };
+
+  React.useEffect(() => {
+    try {
+      const localTheme = customSetting.theme;
+      localTheme ? setTheme(localTheme) : themeToggler('light');
+
+      const localColor = customSetting.themeColor;
+      localColor ? setThemeColor(localColor) : colorToggler('Bocchi');
+    } catch {
+      themeToggler('light');
+      colorToggler('Bocchi');
+    }
+
+    setMountedComponent(true);
+  }, []);
+
+  return [themeMode, themeColor, themeToggler, colorToggler, mountedComponent];
+};
+
 const App: React.FC = () => {
+  const [themeMode, themeColor, themeToggler, colorToggler] = useDarkMode();
+  const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
+
   return (
     <Router>
       <Routes>
         <Route
           element={
             <DetailProvider>
-              <Main>
-                <Outlet />
-              </Main>
+              <ThemeProvider theme={theme}>
+                <Main>
+                  <Outlet />
+                </Main>
+              </ThemeProvider>
             </DetailProvider>
           }
         >

@@ -46,7 +46,6 @@ const BottomNavBar: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 100,
-        borderTop: '1.5px solid #e0e0e0',
         boxShadow: '0 0 16px 0 rgba(0,0,0,0.06)',
       }}
       elevation={3}
@@ -66,11 +65,6 @@ const BottomNavBar: React.FC = () => {
             label={item.label}
             icon={item.icon}
             value={navItems.findIndex((i) => i.key === item.key)}
-            sx={{
-              '&.Mui-selected': {
-                color: '#1976d2',
-              },
-            }}
           />
         ))}
       </BottomNavigation>

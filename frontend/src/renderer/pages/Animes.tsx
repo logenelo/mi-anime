@@ -107,7 +107,11 @@ const Animes: React.FC = () => {
   return (
     <Box sx={{ p: 2 }}>
       <Stack spacing={2}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+        <Typography
+          variant="h4"
+          color="textPrimary"
+          sx={{ fontWeight: 'bold' }}
+        >
           所有動畫
         </Typography>
         <Stack
@@ -164,11 +168,11 @@ const Animes: React.FC = () => {
         </Stack>
         {loading ? (
           <Box sx={{ p: 2 }}>
-            <Typography>載入中...</Typography>
+            <Typography color="textPrimary">載入中...</Typography>
           </Box>
         ) : displayAnimes.length === 0 ? (
           <Box sx={{ p: 2 }}>
-            <Typography>找不到符合條件的動畫</Typography>
+            <Typography color="textPrimary">找不到符合條件的動畫</Typography>
           </Box>
         ) : (
           <Grid container spacing={2} columns={{ xs: 2, sm: 6, md: 10 }}>

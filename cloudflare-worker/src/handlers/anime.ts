@@ -82,9 +82,12 @@ export async function getAnimeById(request: Request, env: Env, ctx: ExecutionCon
 
 export async function listAnimesByIds(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const {ids}: { ids:string[] } = await request.json(); 
-  console.log(ids)
+  
   if (!Array.isArray(ids)) {
-    return new Response('Invalid body format', { status: 400 });
+    return new Response(
+      JSON.stringify({statusCode:500,message:'Invalid body format'}),
+      { status: 200 }
+  );
   }
 
   const animeStrings = await Promise.all(

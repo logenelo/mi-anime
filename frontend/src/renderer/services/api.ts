@@ -4,7 +4,8 @@ import { animesCrawler } from './animeHelper';
 const isDev = false;
 const url = isDev
   ? 'http://localhost:8787/anime'
-  : 'http://api.genelo.org/anime';
+  : 'https://api.genelo.org/anime';
+  //: 'https://cloudflare-worker.genelo5513.workers.dev/anime';
 
 const getMethod = (url: string, body?: any) => {
   const params = new URLSearchParams();

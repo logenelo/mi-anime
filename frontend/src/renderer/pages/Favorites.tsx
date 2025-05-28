@@ -68,34 +68,38 @@ const Favorites: React.FC = () => {
     if (!isReady) return;
 
     const startSort = async () => {
-      const result = await getAnimeByIds(favoriteIds).then(async (resp) => {
-        if (resp.statusCode === 200) {
-          const animes = resp.animes
-            .map((anime: Anime) => {
-              const totalEpisodes = Math.min(
-                getEpisodeCount(anime),
-                anime.episode,
-              );
+      const result = await getAnimeByIds(favoriteIds)
+        .then(async (resp) => {
+          if (resp.statusCode === 200) {
+            const animes = resp.animes
+              .map((anime: Anime) => {
+                const totalEpisodes = Math.min(
+                  getEpisodeCount(anime),
+                  anime.episode,
+                );
 
-              let watched = getEpisodeWatched(anime.id);
-              return {
-                ...anime,
-                hasNew: watched < totalEpisodes,
-              };
-            })
-            .sort((a: Anime, b: Anime) => {
-              if (b.hasNew && !a.hasNew) return 1;
-              if (a.hasNew && !b.hasNew) return -1;
-              if (b.hasNew && a.hasNew) {
-                return b.startDate - a.startDate;
-              }
-              return 0;
-            });
+                let watched = getEpisodeWatched(anime.id);
+                return {
+                  ...anime,
+                  hasNew: watched < totalEpisodes,
+                };
+              })
+              .sort((a: Anime, b: Anime) => {
+                if (b.hasNew && !a.hasNew) return 1;
+                if (a.hasNew && !b.hasNew) return -1;
+                if (b.hasNew && a.hasNew) {
+                  return b.startDate - a.startDate;
+                }
+                return 0;
+              });
 
-          setFavoriteAnime(animes);
-          return animes;
-        }
-      });
+            setFavoriteAnime(animes);
+            return animes;
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching animes:', error);
+        });
 
       return result;
     };
@@ -107,7 +111,11 @@ const Favorites: React.FC = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+      <Typography
+        variant="h4"
+        color="textPrimary"
+        sx={{ mb: 3, fontWeight: 'bold' }}
+      >
         我的收藏
       </Typography>
 
