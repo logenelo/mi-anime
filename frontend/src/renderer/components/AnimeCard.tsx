@@ -4,6 +4,7 @@ import { weekdayColors, type Anime } from '../types/anime';
 import FavoriteButton from './FavoriteButton';
 import { dateFormater } from '../services/helper';
 import { useNavigate } from 'react-router-dom';
+import AnimeDetailContext from '../contexts/AnimeDetailContext';
 
 const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -16,6 +17,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
   const isGrid = variant === 'grid';
 
   const navigate = useNavigate();
+  const { handleOpen } = React.useContext(AnimeDetailContext);
   const startDate = React.useMemo(() => {
     const date = new Date(Number(anime.startDate));
     return dateFormater(date);
@@ -126,7 +128,9 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
 
   return (
     <Card
-      onClick={() => navigate('/anime/' + anime.id)}
+      onClick={() => {
+        handleOpen(anime.id);
+      }}
       elevation={2}
       sx={{
         display: 'flex',

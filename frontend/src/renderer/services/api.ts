@@ -1,7 +1,7 @@
 import type { Anime, Season } from '../types/anime';
 import { animesCrawler } from './animeHelper';
 
-const isDev = true;
+const isDev = false;
 const url = isDev
   ? 'http://localhost:8787/anime'
   : 'http://api.genelo.org/anime';
@@ -80,12 +80,12 @@ export const crawlAnimes = (year: number, season: Season) => {
 export const getAnimesByYearAndSeason = (year: number, season: Season) => {
   return getMethod(`${url}/${year}/${season}`).then(async (resp) => {
     if (resp?.animes.length === 0) {
-      //const animes = await animesCrawler(year, season);
+      const animes = await animesCrawler(year, season);
     
-      // if (animes && animes.length > 0) {
-      //   const result = await addAnimes(animes);
-      //   return result;
-      // }
+      if (animes && animes.length > 0) {
+        const result = await addAnimes(animes);
+        return result;
+      }
 
       return {
         statusCode: 404,
@@ -101,7 +101,6 @@ export const getSeasonAnimes = () => {
   const currentYear = date.getFullYear();
   const currentSeason = (Math.floor((date.getMonth() + 1) / 3) * 3 +
     1) as Season;
-  console.log(currentYear, currentSeason);
 
   return getAnimesByYearAndSeason(currentYear, currentSeason);
 };

@@ -20,10 +20,8 @@ import useFavoriteList from '../../hooks/useFavouriteList';
 import { dateFormater } from '../../services/helper';
 import { getEpisodeCount, WEEKDAY_NAMES } from '../../services/animeHelper';
 
-const AnimeDetail: React.FC = () => {
-  const params = useParams<{ id: string }>();
+const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
   const navigate = useNavigate();
-  const id = params?.id || '';
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [anime, setAnime] = React.useState<Anime>();
@@ -31,7 +29,7 @@ const AnimeDetail: React.FC = () => {
   const [watched, setWatched] = React.useState<number>(0);
 
   React.useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || !id) return;
 
     const fetchWatched = async () => {
       const episode = getEpisodeWatched(id);
@@ -39,9 +37,11 @@ const AnimeDetail: React.FC = () => {
       setWatched(episode);
     };
     fetchWatched();
-  }, [isReady]);
+  }, [isReady, id]);
 
   React.useEffect(() => {
+    if (!id) return;
+
     const fetchData = async () => {
       // Fetch anime details
       const resp = await getAnimeById(id);
@@ -65,113 +65,103 @@ const AnimeDetail: React.FC = () => {
   };
 
   if (!anime || loading) {
-    return <CircularProgress />;
+    return (
+      <Box p={2} display={'flex'} justifyContent={'center'}>
+        <CircularProgress />
+      </Box>
+    );
   }
   return (
     <>
-      <Box>
-        <IconButton
-          onClick={() => navigate(-1)}
-          size="small"
-          sx={{
-            p: 0,
-            color: 'text.primary',
-          }}
-        >
-          <KeyboardArrowLeftRoundedIcon sx={{ fontSize: 30 }} />
-        </IconButton>
-      </Box>
-      <Box sx={{ p: 2 }}>
-        <Grid container spacing={3}>
-          {/* Anime Cover and Basic Info */}
-          <Grid
-            size={{ xs: 12, md: 4 }}
-            sx={{ display: 'flex', justifyContent: 'center' }}
+      <Grid container>
+        <Grid size={'auto'} sx={{ position: 'relative' }}>
+          <Card
+            sx={{
+              display: 'flex',
+              position: 'sticky',
+              top: 0,
+              left: 0,
+              width: 300,
+            }}
           >
-            <Card
-              sx={{
-                width: { xs: 'fit-content', md: 1 },
-                height: { xs: 300, md: 1 },
-              }}
-            >
-              <Box
-                component="img"
-                src={anime.cover}
-                alt={anime.title}
-                width={1}
-                height={1}
-                sx={{ objectFit: 'cover' }}
-              />
-            </Card>
-          </Grid>
-
-          {/* Anime Details */}
-          <Grid size={{ xs: 12, md: 8 }}>
-            <Typography variant="h4" gutterBottom>
-              {anime.title}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              季度： {anime.year}年{' '}
-              {SEASONS.find((s) => s.value === anime.season)?.label}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              開播日期：{dateFormater(new Date(Number(anime.startDate)))}
-            </Typography>
-            <Stack direction="row" spacing={1} mb={'0.35em'}>
-              <Typography variant="body1" gutterBottom>
-                播出星期：
-              </Typography>
-              <Chip
-                size="small"
-                label={WEEKDAY_NAMES[anime.weekday]}
-                sx={{
-                  backgroundColor: weekdayColors[anime.weekday],
-                  color: anime.weekday !== 2 ? 'white' : 'text.primary',
-                }}
-              />
-            </Stack>
-
-            <Stack direction="row" spacing={1} flexWrap={'wrap'} mb={'0.35em'}>
-              <Typography variant="body1">播放平台：</Typography>
-              {anime.platform
-                .filter((p) => p.region === 'HK')
-                .map((p) => (
-                  <Chip
-                    key={p.value}
-                    label={p.value}
-                    component="a"
-                    clickable={Boolean(p.href)}
-                    {...(p.href && { href: p.href, target: '_blank' })}
-                  />
-                ))}
-            </Stack>
-
-            <Typography variant="body1" sx={{ mb: 3 }}>
-              {anime.description}
-            </Typography>
-
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle1">集數</Typography>
-              <Box display="flex" gap={0.5}>
-                {Array.from(
-                  { length: getEpisodeCount(anime) },
-                  (_, i) => i + 1,
-                ).map((episode) => {
-                  return (
-                    <Chip
-                      sx={{ borderRadius: 2 }}
-                      label={episode}
-                      variant={episode <= watched ? 'filled' : 'outlined'}
-                      onClick={() => handleEpisodeClick(episode)}
-                      key={episode}
-                    />
-                  );
-                })}
-              </Box>
-            </Box>
-          </Grid>
+            <Box
+              component="img"
+              src={anime.cover}
+              alt={anime.title}
+              width={1}
+              sx={{ objectFit: 'contain' }}
+            />
+          </Card>
         </Grid>
-      </Box>
+        <Grid size={'grow'} p={2}>
+          <Typography variant="h4" gutterBottom>
+            {anime.title}
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            季度： {anime.year}年{' '}
+            {SEASONS.find((s) => s.value === anime.season)?.label}
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            開播日期：{dateFormater(new Date(Number(anime.startDate)))}
+          </Typography>
+          <Stack direction="row" spacing={1} mb={'0.35em'}>
+            <Typography variant="body1" gutterBottom>
+              播出星期：
+            </Typography>
+            <Chip
+              size="small"
+              label={WEEKDAY_NAMES[anime.weekday]}
+              sx={{
+                backgroundColor: weekdayColors[anime.weekday],
+                color: anime.weekday !== 2 ? 'white' : 'text.primary',
+              }}
+            />
+          </Stack>
+
+          <Stack direction="row" spacing={1} flexWrap={'wrap'}>
+            <Typography variant="body1" sx={{ pb: '0.35em' }}>
+              播放平台：
+            </Typography>
+            {anime.platform
+              .filter((p) => p.region === 'HK')
+              .map((p) => (
+                <Chip
+                  size="small"
+                  key={p.value}
+                  label={p.value}
+                  component="a"
+                  clickable={Boolean(p.href)}
+                  sx={{ pb: '0.35em' }}
+                  {...(p.href && { href: p.href, target: '_blank' })}
+                />
+              ))}
+          </Stack>
+
+          <Typography variant="body1" sx={{ mb: 3, mt: 2 }}>
+            {anime.description}
+          </Typography>
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle1">集數</Typography>
+            <Box display="flex" gap={0.5} flexWrap="wrap">
+              {Array.from(
+                { length: getEpisodeCount(anime) },
+                (_, i) => i + 1,
+              ).map((episode) => {
+                return (
+                  <Chip
+                    sx={{ borderRadius: 2, minWidth: 39 }}
+                    label={episode}
+                    variant={episode <= watched ? 'filled' : 'outlined'}
+                    onClick={() => handleEpisodeClick(episode)}
+                    key={episode}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
     </>
   );
 };

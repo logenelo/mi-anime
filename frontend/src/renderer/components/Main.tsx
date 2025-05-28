@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Container } from '@mui/material';
 import BottomNavBar from './BottomNavBar';
 import DefaultBG from '../../../assets/background/background-1.jpg';
+import AnimeDetailDrawer from './AnimeDetailDrawer';
 
 type MainProps = {
   children: React.ReactNode;
@@ -107,80 +108,93 @@ const Main: React.FC<MainProps> = ({ children }) => {
     // 根據滑鼠位置移動背景
     const handleMouseMove = (e: MouseEvent) => {
       const { innerWidth, innerHeight } = window;
-      const xPercent = (e.clientX / innerWidth - 0.5) * 2; // -1 ~ 1
-      const yPercent = (e.clientY / innerHeight - 0.5) * 2; // -1 ~ 1
-      const maxOffset = 75;
-      setTargetTransform([xPercent * maxOffset, yPercent * maxOffset]);
-      // 記錄滑鼠位置供初始化用
+
+      // Calculate the maximum offset to prevent empty space
+      const maxOffsetX = (innerWidth * 0.2) / 2;
+      const maxOffsetY = (innerHeight * 0.2) / 2;
+
+      // Calculate the percentage offset based on mouse position
+      const xPercent = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
+      const yPercent = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
+
+      // Apply the calculated offsets
+      setTargetTransform([xPercent * maxOffsetX, yPercent * maxOffsetY]);
+
+      // Record mouse position for initialization
       (window as any).mouseX = e.clientX;
       (window as any).mouseY = e.clientY;
     };
+
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        width: '100%',
-        height: '100vh',
-        overflow: 'hidden',
-      }}
-    >
-      <Box
-        component="img"
-        src={bgUrl}
-        sx={{
-          position: 'fixed',
-          inset: '-20vh',
-          zIndex: 0,
-          transition: 'background-image 0.5s ease-in-out',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            transform: 'scale(1.2)',
-          },
-        }}
-        style={{ transform: bgTransform }}
-      />
+    <>
+      <AnimeDetailDrawer />
       <Box
         sx={{
           position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          flexDirection: 'column',
+          width: '100%',
           height: '100vh',
-          bgcolor: 'rgba(255,255,255,0.70)',
-          backdropFilter: `blur(${blur}px)`,
-          WebkitBackdropFilter: `blur(${blur}px)`,
+          overflow: 'hidden',
         }}
       >
         <Box
-          width={1}
-          flex={1}
-          display="flex"
-          mb={8}
-          sx={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
-        >
-          <Container
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              flex: 1,
-              pb: 8,
-              pt: 2,
-              px: { xs: 1, sm: 2 },
-            }}
-          >
-            {children}
-          </Container>
-        </Box>
+          id="background"
+          sx={{
+            position: 'absolute',
+            top: '-10vh',
+            left: '-10vw',
+            width: '120vw',
+            height: '120vh',
+            backgroundImage: `url(${bgUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            transition: 'background-image 0.5s ease-in-out',
+            zIndex: 0,
+          }}
+          style={{ transform: bgTransform }}
+        />
 
-        <BottomNavBar />
+        <Box
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100vh',
+            bgcolor: 'rgba(255,255,255,0.70)',
+            backdropFilter: `blur(${blur}px)`,
+            WebkitBackdropFilter: `blur(${blur}px)`,
+            transition: 'backdrop-filter 0.3s ease-in-out',
+          }}
+        >
+          <Box
+            width={1}
+            flex={1}
+            display="flex"
+            mb={8}
+            sx={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
+          >
+            <Container
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                pb: 8,
+                pt: 2,
+                px: { xs: 1, sm: 2 },
+              }}
+            >
+              {children}
+            </Container>
+          </Box>
+
+          <BottomNavBar />
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

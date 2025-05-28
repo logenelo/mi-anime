@@ -12,6 +12,7 @@ export const WEEKDAY_NAMES = [
   '五',
   '六',
 ] as const;
+type WeekdayNames = typeof WEEKDAY_NAMES[number];
 
 export const getWeekdayLabel = (day: number) => {
   return WEEKDAY_NAMES[day];
@@ -29,7 +30,7 @@ export const animesCrawler = async (year: number, season: Season) => {
     const id = icon.attr('acgs-bangumi-data-id');
     const dateToday = icon.attr('datetoday');
 
-    const weekdayLabel = icon.attr('weektoday') || '';
+    const weekdayLabel = icon.attr('weektoday') as WeekdayNames 
     const startDate = Number(icon.attr('onairtime'));
 
     const card = $('#acgs-anime-list').find(`[acgs-bangumi-anime-id="${id}"]`);
@@ -39,16 +40,8 @@ export const animesCrawler = async (year: number, season: Season) => {
     if (!title) return;
     const description = card.find('.anime_story').first().text().trim();
 
-    const weekdayMap: Record<string, number> = {
-      日: 0,
-      一: 1,
-      二: 2,
-      三: 3,
-      四: 4,
-      五: 5,
-      六: 6,
-    };
-    const weekday = weekdayMap[weekdayLabel] || 0;
+    
+    const weekday = WEEKDAY_NAMES.indexOf(weekdayLabel) || 0;
 
     // Extract cover image
     const cover = card.find('.anime_cover_image img').attr('src') || '';

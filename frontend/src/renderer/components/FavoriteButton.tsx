@@ -42,26 +42,31 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ animeId }) => {
 
   const [isFavorite, setIsFavorite] = useState(initialState);
 
-  const handleClick = useCallback(() => {
-    const newState = !isFavorite;
-    setIsFavorite(newState);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      //e.preventDefault();
+      e.stopPropagation();
+      const newState = !isFavorite;
+      setIsFavorite(newState);
 
-    try {
-      const stored = localStorage.getItem('favoriteList');
-      const favoriteList = stored ? JSON.parse(stored) : [];
-      if (newState) {
-        favoriteList.push(animeId);
-      } else {
-        const index = favoriteList.indexOf(animeId);
-        if (index > -1) {
-          favoriteList.splice(index, 1);
+      try {
+        const stored = localStorage.getItem('favoriteList');
+        const favoriteList = stored ? JSON.parse(stored) : [];
+        if (newState) {
+          favoriteList.push(animeId);
+        } else {
+          const index = favoriteList.indexOf(animeId);
+          if (index > -1) {
+            favoriteList.splice(index, 1);
+          }
         }
+        localStorage.setItem('favoriteList', JSON.stringify(favoriteList));
+      } catch (error) {
+        console.error('Error updating favorites:', error);
       }
-      localStorage.setItem('favoriteList', JSON.stringify(favoriteList));
-    } catch (error) {
-      console.error('Error updating favorites:', error);
-    }
-  }, [isFavorite, animeId]);
+    },
+    [isFavorite, animeId],
+  );
 
   return (
     <StyledIconButton onClick={handleClick}>
@@ -69,14 +74,14 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({ animeId }) => {
         <FavoriteIcon
           sx={{
             ...iconStyles,
-            color: 'error.main',
+            color: 'red',
           }}
         />
       ) : (
         <FavoriteBorderIcon
           sx={{
             ...iconStyles,
-            color: 'error.light',
+            color: 'red',
           }}
         />
       )}

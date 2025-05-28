@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Typography,
   Box,
@@ -8,15 +8,14 @@ import {
   FormControl,
   InputLabel,
   Grid,
-  Card,
-  CardMedia,
+  OutlinedInput,
+  InputAdornment,
 } from '@mui/material';
 import AnimeCard from '../components/AnimeCard';
 import { Anime, Season, SEASONS } from '../types/anime';
 import { getAllAnimes, getAnimesByYearAndSeason } from '../services/api';
-import FavoriteButton from '../components/FavoriteButton';
+import { Search } from '@mui/icons-material';
 
-// Add constants for years and seasons
 const CURRENT_YEAR = new Date().getFullYear();
 const START_YEAR = 2020;
 const YEARS = Array.from(
@@ -24,73 +23,85 @@ const YEARS = Array.from(
   (_, i) => START_YEAR + i,
 ).reverse();
 
-const getCurrentSeason = () => {
-  const month = new Date().getMonth() + 1;
-  return Math.ceil(month / 3) * 3 - 2;
-};
-
 const Animes: React.FC = () => {
-  const [loading, setLoading] = React.useState(true);
-  const [animes, setAnimes] = React.useState<Anime[]>([]);
-  const [year, setYear] = React.useState<number>(0);
-  const [season, setSeason] = React.useState<Season | 0>(0);
+  const [loading, setLoading] = useState(true);
+  const [animes, setAnimes] = useState<Anime[]>([]);
+  const [year, setYear] = useState<number>(0);
+  const [season, setSeason] = useState<Season | 0>(0);
+  const [searchText, setSearchText] = useState<string>('');
+  const [debouncedSearchText, setDebouncedSearchText] = useState<string>('');
 
-  const addAnimes = (year: number, season: Season) => {
-    console.log('Getting new animes...');
-    getAnimesByYearAndSeason(year, season).then((resp) => {
-      console.log(resp);
-      if (resp.statusCode === 200) {
-        const sortedAnimes = [...animes, ...resp.animes].sort(
-          (a: Anime, b: Anime) => b.startDate - a.startDate,
-        );
-        setAnimes(sortedAnimes);
+  // Debounce searchText
+  useEffect(() => {
+    if (animes.length === 0) return;
+    setLoading(true);
+    const handler = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+      setLoading(false);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchText]);
+
+  const addAnimes = useCallback(
+    async (year: number, season: Season) => {
+      try {
+        setLoading(true);
+        const resp = await getAnimesByYearAndSeason(year, season);
+        if (resp.statusCode === 200) {
+          const sortedAnimes = animes
+            .concat(resp.animes)
+            .sort((a: Anime, b: Anime) => b.startDate - a.startDate);
+          setAnimes(sortedAnimes);
+        }
+      } catch (error) {
+        console.error('Error fetching animes:', error);
+      } finally {
         setLoading(false);
-        return resp.animes;
       }
-    });
-  };
+    },
+    [animes],
+  );
 
   const displayAnimes = useMemo(() => {
-    if (loading && animes.length === 0) return [];
-    if (!year && !season) return animes;
-
+    if (!year && !season && !debouncedSearchText) return animes;
     setLoading(true);
-    console.log(animes);
     const filteredAnimes = animes.filter((anime) => {
       return (
-        (!year || anime.year === year) && (!season || anime.season === season)
+        (!year || anime.year === year) &&
+        (!season || anime.season === season) &&
+        (!debouncedSearchText ||
+          anime.title.toLowerCase().includes(debouncedSearchText.toLowerCase()))
       );
     });
-    if (filteredAnimes.length > 0) {
-      setLoading(false);
-      return filteredAnimes;
-    }
 
-    if (year && season) {
-      const newAnimes = addAnimes(year, season);
-      return filteredAnimes;
+    if (filteredAnimes.length === 0 && year && season) {
+      addAnimes(year, season);
     }
-
     setLoading(false);
-    return [];
-  }, [year, season, animes]);
+    return filteredAnimes;
+  }, [year, season, debouncedSearchText, addAnimes]);
 
-  React.useEffect(() => {
-    getAllAnimes()
-      .then((resp) => {
+  useEffect(() => {
+    const fetchAnimes = async () => {
+      try {
+        const resp = await getAllAnimes();
         if (resp.statusCode === 200) {
           const sortedAnimes = resp.animes.sort(
             (a: Anime, b: Anime) => b.startDate - a.startDate,
           );
           setAnimes(sortedAnimes);
         }
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
+      } catch (error) {
+        console.error('Error fetching animes:', error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchAnimes();
   }, []);
 
   return (
@@ -139,60 +150,31 @@ const Animes: React.FC = () => {
               ))}
             </Select>
           </FormControl>
+          <FormControl size="small" sx={{ minWidth: 300 }}>
+            <OutlinedInput
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              startAdornment={
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              }
+            />
+          </FormControl>
         </Stack>
         {loading ? (
           <Box sx={{ p: 2 }}>
             <Typography>載入中...</Typography>
           </Box>
-        ) : displayAnimes.length == 0 ? (
+        ) : displayAnimes.length === 0 ? (
           <Box sx={{ p: 2 }}>
             <Typography>找不到符合條件的動畫</Typography>
           </Box>
         ) : (
-          /* Add AnimeList with filtered data */
           <Grid container spacing={2} columns={{ xs: 2, sm: 6, md: 10 }}>
             {displayAnimes.map((anime) => (
-              <Grid size={2} id={anime.id} key={anime.id}>
-                <Card
-                  elevation={2}
-                  sx={{
-                    position: 'relative',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: (theme) => theme.shadows[8],
-                    },
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    width={1}
-                    height={250}
-                    image={anime.cover}
-                    alt={anime.title}
-                    sx={{ objectFit: 'cover' }}
-                  />
-                  <Box
-                    width={1}
-                    boxSizing={'border-box'}
-                    position={'absolute'}
-                    bottom={0}
-                    left={0}
-                    p={1}
-                    bgcolor="rgba(0, 0, 0, 0.5)"
-                  >
-                    <Typography
-                      variant="h6"
-                      color="white"
-                      sx={{
-                        fontSize: '1.1rem',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {anime.title} <FavoriteButton animeId={anime.id} />
-                    </Typography>
-                  </Box>
-                </Card>
+              <Grid size={2} key={anime.id}>
+                <AnimeCard anime={anime} variant="grid" />
               </Grid>
             ))}
           </Grid>

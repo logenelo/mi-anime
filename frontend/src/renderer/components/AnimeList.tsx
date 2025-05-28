@@ -90,10 +90,6 @@ const AnimeList: React.FC<Props> = ({ animeList }) => {
     return [...WEEKDAY_NAMES.slice(today), ...WEEKDAY_NAMES.slice(0, today)];
   }, []);
 
-  useEffect(() => {
-    console.log(reorderedWeekdays);
-  }, [reorderedWeekdays]);
-
   const handleWeekdayChange = (newWeekday: number | null) => {
     setSelectedWeekday(newWeekday === selectedWeekday ? null : newWeekday);
   };
