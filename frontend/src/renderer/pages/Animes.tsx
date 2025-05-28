@@ -15,6 +15,7 @@ import AnimeCard from '../components/AnimeCard';
 import { Anime, Season, SEASONS } from '../types/anime';
 import { getAllAnimes, getAnimesByYearAndSeason } from '../services/api';
 import { Search } from '@mui/icons-material';
+import Loading from '../components/Loading';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const START_YEAR = 2020;
@@ -167,8 +168,8 @@ const Animes: React.FC = () => {
           </FormControl>
         </Stack>
         {loading ? (
-          <Box sx={{ p: 2 }}>
-            <Typography color="textPrimary">載入中...</Typography>
+          <Box p={2} display="flex" justifyContent="center">
+            <Loading />
           </Box>
         ) : displayAnimes.length === 0 ? (
           <Box sx={{ p: 2 }}>

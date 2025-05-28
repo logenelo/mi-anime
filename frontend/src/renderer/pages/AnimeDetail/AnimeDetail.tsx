@@ -1,16 +1,14 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
   Card,
-  CardMedia,
-  Grid,
   Chip,
   Stack,
   IconButton,
-  CircularProgress,
   Icon,
+  Grid,
 } from '@mui/material';
 import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
 
@@ -19,6 +17,7 @@ import { Anime, SEASONS, weekdayColors } from '../../types/anime';
 import useFavoriteList from '../../hooks/useFavouriteList';
 import { dateFormater } from '../../services/helper';
 import { getEpisodeCount, WEEKDAY_NAMES } from '../../services/animeHelper';
+import Loading from '../../components/Loading';
 
 const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
   const navigate = useNavigate();
@@ -67,7 +66,7 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
   if (!anime || loading) {
     return (
       <Box p={2} display={'flex'} justifyContent={'center'}>
-        <CircularProgress />
+        <Loading />
       </Box>
     );
   }

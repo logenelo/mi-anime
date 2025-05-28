@@ -4,9 +4,6 @@ import {
   Box,
   Alert,
   Grid,
-  Card,
-  CardMedia,
-  CircularProgress,
   Select,
   FormControl,
   InputLabel,
@@ -16,13 +13,12 @@ import {
   OutlinedInput,
   Chip,
 } from '@mui/material';
-import AnimeList from '../components/AnimeList';
 import { getAnimeByIds } from '../services/api';
 import AnimeCard from '../components/AnimeCard';
 import { Anime } from '../types/anime';
-import { get } from 'node:http';
 import { getEpisodeCount } from '../services/animeHelper';
 import useFavoriteList from '../hooks/useFavouriteList';
+import Loading from '../components/Loading';
 
 const Favorites: React.FC = () => {
   const { isReady, getEpisodeWatched } = useFavoriteList();
@@ -120,7 +116,9 @@ const Favorites: React.FC = () => {
       </Typography>
 
       {loading ? (
-        <CircularProgress />
+        <Box p={2} display="flex" justifyContent="center">
+          <Loading />
+        </Box>
       ) : (
         <>
           {favoriteIds.length === 0 && (
