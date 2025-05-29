@@ -1,7 +1,6 @@
 import React from 'react';
 import { useIndexedDB } from 'react-indexed-db-hook';
-
-const STORE_NAME = 'favorites';
+import { STORE_NAME } from '../DBConfig';
 
 type Data = {
   id: string;
@@ -13,9 +12,7 @@ const useFavoriteList = () => {
     Record<string, number>
   >({});
 
-  const isReady = React.useMemo(() => {
-    return Object.keys(favouriteData).length > 0;
-  }, [favouriteData]);
+  const [isReady, setIsReady] = React.useState(false);
 
   React.useEffect(() => {
     db.getAll().then((data) => {
@@ -24,6 +21,7 @@ const useFavoriteList = () => {
       }, {});
 
       setFavouriteData(result);
+      setIsReady(true);
     });
   }, []);
 

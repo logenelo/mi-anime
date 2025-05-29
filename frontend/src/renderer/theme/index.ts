@@ -1,17 +1,17 @@
 import { Theme, responsiveFontSizes } from '@mui/material';
 import { createTheme, ComponentsOverrides } from '@mui/material/styles';
-import shadows from './shadows'
-import palette from './palette'
+import shadows from './shadows';
+import palette from './palette';
 import { ThemeMode } from '../types/setting';
 
-
-
 const getTheme = (
-  mode: string, 
-  color:string, 
-  themeToggler: (mode:ThemeMode) => void,
-  colorToggler: (color:string) => void
-): Theme =>{
+  mode: string,
+  color: string,
+  themeToggler: (mode: ThemeMode) => void,
+  colorToggler: (color: string) => void,
+): Theme => {
+  console.log('Change Theme', mode, color);
+  window.electron.ipcRenderer.sendMessage('theme-change', palette[color][mode]);
   return responsiveFontSizes(
     createTheme({
       palette: palette[color][mode],
@@ -62,11 +62,18 @@ const getTheme = (
             },
           } as ComponentsOverrides['MuiCard'],
         },
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              backgroundColor: palette[color][mode].background.default,
+            },
+          } as ComponentsOverrides['MuiPaper'],
+        },
       },
       themeToggler,
-      colorToggler
+      colorToggler,
     }),
-  )
+  );
 };
 
 export default getTheme;

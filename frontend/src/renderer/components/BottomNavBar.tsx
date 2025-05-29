@@ -57,6 +57,7 @@ const BottomNavBar: React.FC = () => {
         }}
         sx={{
           height: 64,
+          bgcolor: 'background.default',
         }}
       >
         {navItems.map((item) => (

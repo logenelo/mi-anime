@@ -1,6 +1,6 @@
-const DB_NAME = 'animeDB';
-const STORE_NAME = 'favorites';
-const DB_VERSION = 1;
+export const DB_NAME = 'animeDB';
+export const STORE_NAME = 'favorites';
+export const DB_VERSION = 1;
 
 export const DBConfig = {
   name: DB_NAME,

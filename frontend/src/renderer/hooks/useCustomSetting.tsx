@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UserPreferences } from '../types/setting';
 
 const DefaultPreferences: UserPreferences = {
   theme: 'light',
+  themeColor: 'Bocchi',
   blurAmount: 2,
   cardLayout: 'grid',
 };
@@ -11,15 +12,8 @@ const useCustomSetting = (): [
   UserPreferences,
   (newValue: Partial<UserPreferences>) => void,
 ] => {
-  const [customSetting, setUserPreferences] = useState<UserPreferences>(() => {
-    try {
-      const stored = localStorage.getItem('user_preferences');
-      return stored ? JSON.parse(stored) : DefaultPreferences;
-    } catch (error) {
-      console.error('Error reading user preferences:', error);
-      return DefaultPreferences;
-    }
-  });
+  const [customSetting, setUserPreferences] =
+    useState<UserPreferences>(DefaultPreferences);
   const setCustomSetting = (newValue: Partial<UserPreferences>) => {
     setUserPreferences((prev) => {
       const updated = { ...prev, ...newValue };
@@ -28,6 +22,13 @@ const useCustomSetting = (): [
       return updated;
     });
   };
+
+  useEffect(() => {
+    const data = localStorage.getItem('user_preferences');
+    if (data) {
+      setUserPreferences(JSON.parse(data));
+    }
+  }, []);
 
   return [customSetting, setCustomSetting];
 };

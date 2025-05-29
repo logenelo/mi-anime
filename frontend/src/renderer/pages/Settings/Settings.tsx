@@ -39,15 +39,7 @@ const Settings: React.FC = () => {
   const { themeToggler, colorToggler } = theme;
   const { mode } = theme.palette;
 
-  const [backgrounds, setBackgrounds] = useState<CustomBackground[]>(() => {
-    try {
-      const stored = localStorage.getItem('custom_backgrounds');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Error loading backgrounds:', error);
-      return [];
-    }
-  });
+  const [backgrounds, setBackgrounds] = useState<CustomBackground[]>([]);
 
   const [currentBg, setCurrentBg] = useState<string>(
     () => localStorage.getItem('anime_bg') || DefaultBG,
@@ -159,9 +151,17 @@ const Settings: React.FC = () => {
 
   // Add lazy loading for images
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const stored = localStorage.getItem('custom_backgrounds');
+    if (stored) {
+      setBackgrounds(JSON.parse(stored));
+    }
+  }, []);
   useEffect(() => {
     errorMsg && console.log(errorMsg);
   }, [errorMsg]);
+
   return (
     <Box sx={{ p: 2 }}>
       {/* Theme Settings */}
@@ -230,6 +230,7 @@ const Settings: React.FC = () => {
               </Typography>
               <RadioGroup
                 row
+                id="theme-toggle"
                 name="theme"
                 aria-label="theme"
                 value={preferences.theme}
@@ -319,26 +320,30 @@ const Settings: React.FC = () => {
                 <Add sx={{ fontSize: '1rem' }} />
               </IconButton>
             </Stack>
-            <ImageList cols={3} gap={8}>
-              <ImageCard
-                src={DefaultBG}
-                isSelected={currentBg === DefaultBG}
-                onSelect={() => handleSelect(DefaultBG)}
-              />
-              {backgrounds.map((bg) => (
+            <Grid container spacing={1}>
+              <Grid size={4}>
                 <ImageCard
-                  key={bg.id}
-                  src={bg.url}
-                  isSelected={currentBg === bg.url}
-                  onSelect={() => handleSelect(bg.url)}
-                  onDelete={() => handleDelete(bg.id)}
-                  isLoaded={loadedImages.has(bg.url)}
-                  onLoad={() =>
-                    setLoadedImages((prev) => new Set([...prev, bg.url]))
-                  }
+                  src={DefaultBG}
+                  isSelected={currentBg === DefaultBG}
+                  onSelect={() => handleSelect(DefaultBG)}
                 />
+              </Grid>
+              {backgrounds.map((bg) => (
+                <Grid size={4}>
+                  <ImageCard
+                    key={bg.id}
+                    src={bg.url}
+                    isSelected={currentBg === bg.url}
+                    onSelect={() => handleSelect(bg.url)}
+                    onDelete={() => handleDelete(bg.id)}
+                    isLoaded={loadedImages.has(bg.url)}
+                    onLoad={() =>
+                      setLoadedImages((prev) => new Set([...prev, bg.url]))
+                    }
+                  />
+                </Grid>
               ))}
-            </ImageList>
+            </Grid>
           </Box>
           <input
             ref={fileInputRef}

@@ -13,7 +13,7 @@ import './App.css';
 import { initDB } from 'react-indexed-db-hook';
 import { DBConfig } from './DBConfig';
 import { DetailProvider } from './contexts/AnimeDetailContext';
-import { ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
 import useCustomSetting from './hooks/useCustomSetting';
 import { ThemeMode } from './types/setting';
 import getTheme from './theme';

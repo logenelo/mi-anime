@@ -64,12 +64,8 @@ const Main: React.FC<MainProps> = ({ children }) => {
       const stored = localStorage.getItem('user_preferences');
       let blurAmount = 0;
       if (stored) {
-        try {
-          const prefs = JSON.parse(stored);
-          blurAmount = prefs.blurAmount || 0;
-        } catch (e) {
-          blurAmount = 0;
-        }
+        const prefs = JSON.parse(stored);
+        blurAmount = prefs.blurAmount || 0;
       }
       setBlur(blurAmount);
     };
@@ -134,13 +130,14 @@ const Main: React.FC<MainProps> = ({ children }) => {
 
   return (
     <>
-      <AnimeDetailDrawer />
       <Box
         sx={{
           position: 'relative',
           width: '100%',
           height: '100vh',
           overflow: 'hidden',
+
+          scrollbarColor: `${theme.palette.primary.dark} ${theme.palette.background.default} `,
         }}
       >
         <Box
@@ -175,6 +172,20 @@ const Main: React.FC<MainProps> = ({ children }) => {
           }}
         >
           <Box
+            className="titlebar"
+            sx={{
+              height: 32,
+              background: theme.palette.background.default,
+              color: theme.palette.primary.dark,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              appRegion: 'drag',
+            }}
+          >
+            MiAnime
+          </Box>
+          <Box
             width={1}
             flex={1}
             display="flex"
@@ -198,6 +209,7 @@ const Main: React.FC<MainProps> = ({ children }) => {
           <BottomNavBar />
         </Box>
       </Box>
+      <AnimeDetailDrawer />
     </>
   );
 };

@@ -61,7 +61,7 @@ const configuration: webpack.Configuration = {
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'production',
       DEBUG_PROD: false,
-      START_MINIMIZED: false,
+      START_MINIMIZED: true,
     }),
 
     new webpack.DefinePlugin({
