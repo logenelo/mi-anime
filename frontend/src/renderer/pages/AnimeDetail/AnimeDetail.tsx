@@ -121,7 +121,14 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
             <Typography variant="body1" sx={{ pb: '0.35em' }}>
               播放平台：
             </Typography>
-            {anime.platform
+            {[
+              ...anime.platform,
+              {
+                value: '其他',
+                href: 'https://anime1.cc/search?q=' + anime.title,
+                region: 'HK',
+              },
+            ]
               .filter((p) => p.region === 'HK')
               .map((p) => (
                 <Chip

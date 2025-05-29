@@ -98,9 +98,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
           </Stack>
           <Stack>
             <Stack direction="row" alignItems="center">
-              <Typography variant="body2" color="text.secondary">
-                播出時間：
-              </Typography>
+              <Typography variant="body2">播出時間：</Typography>
               <Chip
                 size="small"
                 label={WEEKDAY_NAMES[anime.weekday]}
@@ -111,17 +109,33 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
               />
             </Stack>
 
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" gutterBottom>
               開播日期：{startDate} {anime?.isContin ? ' 跨季續播' : ''}
             </Typography>
 
-            <Typography variant="body2" color="text.secondary">
-              播出平台：
-              {anime.platform
-                .filter((platform) => platform.region === 'HK')
-                .map((platform) => platform.value)
-                .join(', ')}
-            </Typography>
+            <Stack direction="row" spacing={1} flexWrap={'wrap'} mb="0.35em">
+              <Typography variant="body2">播放平台：</Typography>
+              {[
+                ...anime.platform,
+                {
+                  value: '其他',
+                  href: 'https://anime1.cc/search?q=' + anime.title,
+                  region: 'HK',
+                },
+              ]
+                .filter((p) => p.region === 'HK')
+                .map((p) => (
+                  <Chip
+                    size="small"
+                    key={p.value}
+                    label={p.value}
+                    component="a"
+                    clickable={Boolean(p.href)}
+                    sx={{ pb: '0.35em' }}
+                    {...(p.href && { href: p.href, target: '_blank' })}
+                  />
+                ))}
+            </Stack>
           </Stack>
         </Stack>
       </>
