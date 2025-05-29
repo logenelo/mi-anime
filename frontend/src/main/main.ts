@@ -74,12 +74,14 @@ const createWindow = async () => {
     width: 1024,
     height: 728,
     icon: getAssetPath('icon.png'),
+    backgroundColor: '#ffffff', // Default background color (light theme)
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
+  mainWindow.setMenuBarVisibility(false);
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
@@ -110,6 +112,11 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
+
+  // Listen for theme change events from the renderer process
+  ipcMain.on('theme-change', (event, color) => {
+    mainWindow?.setBackgroundColor(color);
+  });
 };
 
 /**
