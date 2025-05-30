@@ -131,6 +131,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
                     label={p.value}
                     component="a"
                     clickable={Boolean(p.href)}
+                    onClick={(e) => e.stopPropagation()}
                     sx={{ pb: '0.35em' }}
                     {...(p.href && { href: p.href, target: '_blank' })}
                   />

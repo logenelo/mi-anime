@@ -63,6 +63,7 @@ const App: React.FC = () => {
   const [themeMode, themeColor, themeToggler, colorToggler] = useDarkMode();
   const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
 
+  React.useEffect(() => {}, []);
   return (
     <Router>
       <Routes>

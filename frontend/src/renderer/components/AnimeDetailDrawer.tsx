@@ -26,6 +26,7 @@ const AnimeDetailDrawer: React.FC = () => {
           },
         },
       }}
+      sx={{ zIndex: 1100 }}
     >
       <AnimeDetail id={animeDetailId} />
     </Drawer>

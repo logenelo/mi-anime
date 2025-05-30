@@ -12,7 +12,7 @@ export const WEEKDAY_NAMES = [
   '五',
   '六',
 ] as const;
-type WeekdayNames = typeof WEEKDAY_NAMES[number];
+type WeekdayNames = (typeof WEEKDAY_NAMES)[number];
 
 export const getWeekdayLabel = (day: number) => {
   return WEEKDAY_NAMES[day];
@@ -30,7 +30,7 @@ export const animesCrawler = async (year: number, season: Season) => {
     const id = icon.attr('acgs-bangumi-data-id');
     const dateToday = icon.attr('datetoday');
 
-    const weekdayLabel = icon.attr('weektoday') as WeekdayNames 
+    const weekdayLabel = icon.attr('weektoday') as WeekdayNames;
     const startDate = Number(icon.attr('onairtime'));
 
     const card = $('#acgs-anime-list').find(`[acgs-bangumi-anime-id="${id}"]`);
@@ -40,7 +40,6 @@ export const animesCrawler = async (year: number, season: Season) => {
     if (!title) return;
     const description = card.find('.anime_story').first().text().trim();
 
-    
     const weekday = WEEKDAY_NAMES.indexOf(weekdayLabel) || 0;
 
     // Extract cover image
@@ -51,9 +50,20 @@ export const animesCrawler = async (year: number, season: Season) => {
       .find('.steam-site-item')
       .map((i, item) => {
         const siteElement = $(item).find('.stream-site');
+        let href = siteElement.attr('href') || '';
+        const site = $(item).find('.steam-site-name').text().trim();
+        if (!href) {
+          const sitesMap: Record<string, string> = {
+            巴哈姆特動畫瘋:
+              'https://ani.gamer.com.tw/search.php?keyword=' + title,
+            愛奇藝: `https://www.iq.com/search?query=${title}&originInput=`,
+            Netflix: `https://www.netflix.com/search?q=${title}`,
+          };
+          href = sitesMap[site] || '';
+        }
         return {
-          value: $(item).find('.steam-site-name').text().trim(),
-          href: siteElement.attr('href') || '',
+          value: site,
+          href: href,
           region: siteElement.attr('site-area') || '',
         };
       })
@@ -80,10 +90,11 @@ export const animesCrawler = async (year: number, season: Season) => {
   return animes;
 };
 
-export const getEpisodeCount = (anime:Anime) => {
+export const getEpisodeCount = (anime: Anime) => {
   const date = new Date();
 
   // Calculate episode count divided by week
-  const episodeCount = Math.floor(((date.getTime() - Number(anime.startDate)) / 604800000)) + 1;
+  const episodeCount =
+    Math.floor((date.getTime() - Number(anime.startDate)) / 604800000) + 1;
   return Math.min(episodeCount, anime.episode);
 };

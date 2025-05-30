@@ -131,6 +131,25 @@ const Main: React.FC<MainProps> = ({ children }) => {
   return (
     <>
       <Box
+        className="titlebar"
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: 32,
+          background: theme.palette.background.default,
+          color: theme.palette.primary.dark,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          appRegion: 'drag',
+          zIndex: 1302,
+        }}
+      >
+        關於我的追番日記
+      </Box>
+      <Box
         sx={{
           position: 'relative',
           width: '100%',
@@ -171,20 +190,7 @@ const Main: React.FC<MainProps> = ({ children }) => {
             transition: 'backdrop-filter 0.3s ease-in-out',
           }}
         >
-          <Box
-            className="titlebar"
-            sx={{
-              height: 32,
-              background: theme.palette.background.default,
-              color: theme.palette.primary.dark,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              appRegion: 'drag',
-            }}
-          >
-            MiAnime
-          </Box>
+          <Box height={32} />
           <Box
             width={1}
             flex={1}

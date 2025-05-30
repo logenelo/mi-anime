@@ -149,7 +149,7 @@ app.on('ready', () => {
   // Create a context menu for the tray
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'MiAnime',
+      label: '關於我的追番日記',
       click: () => {
         if (mainWindow) {
           mainWindow.show();
@@ -168,7 +168,7 @@ app.on('ready', () => {
   tray.setContextMenu(contextMenu);
 
   // Set a tooltip for the tray icon
-  tray.setToolTip('MiAnime');
+  tray.setToolTip('關於我的追番日記');
 
   // Handle click events on the tray icon
   tray.on('click', () => {

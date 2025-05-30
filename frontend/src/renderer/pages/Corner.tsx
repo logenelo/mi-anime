@@ -1,11 +1,25 @@
-import { Box, Typography, IconButton, Card, Divider } from '@mui/material';
-import { KeyboardArrowDown, Remove } from '@mui/icons-material';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Card,
+  Divider,
+  Collapse,
+  Link,
+} from '@mui/material';
+import {
+  Expand,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+  Remove,
+} from '@mui/icons-material';
 import { Anime } from '../types/anime';
 import Loading from '..//components/Loading';
 import { getAnimeByIds } from '../services/api';
 import { getEpisodeCount } from '../services/animeHelper';
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import useFavoriteList from '../hooks/useFavouriteList';
+import '../App.css';
 
 const Corner = () => {
   const { isReady, getEpisodeWatched } = useFavoriteList();
@@ -15,15 +29,75 @@ const Corner = () => {
   const [episodeWated, setEpisodeWated] = React.useState<
     Record<string, number>
   >({});
-  const favorIds = JSON.parse(
-    window.localStorage.getItem('favoriteList') || '[]',
+  const favorIds = useMemo(
+    () => JSON.parse(window.localStorage.getItem('favoriteList') || '[]'),
+    [],
   );
   const handleClose = () => {
     window.close(); // Close the window
   };
 
+  const AnimeItem = memo(({ anime }: { anime: Anime }) => {
+    const [expanded, setExpanded] = React.useState(false);
+    const platforms = anime.platform.filter(
+      (item) => item.region === 'HK' && item.href,
+    );
+    console.log(anime.platform);
+    return (
+      <>
+        <Box
+          display="flex"
+          justifyContent={'space-between'}
+          alignItems={'center'}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+            <Typography
+              component="a"
+              href={platforms?.[0]?.href}
+              variant="h6"
+              key={anime.id}
+              sx={{
+                textDecoration: 'none',
+                color: 'inherit',
+                '&:hover': { fontWeight: 'bold' },
+              }}
+            >
+              {anime.title}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: '3px' }}>
+              {episodeWated[anime.id]
+                ? '已看 ' +
+                  episodeWated[anime.id] +
+                  '/' +
+                  getEpisodeCount(anime)
+                : '未看'}
+            </Typography>
+          </Box>
+          <IconButton
+            sx={{ color: 'white' }}
+            onClick={() => {
+              setExpanded(!expanded);
+            }}
+          >
+            {expanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          </IconButton>
+        </Box>
+        <Collapse in={expanded}>
+          {platforms.map((item, i) => {
+            return (
+              <Box key={i}>
+                <Link href={item.href} color="inherit" underline="hover">
+                  {item.value}
+                </Link>
+              </Box>
+            );
+          })}
+        </Collapse>
+      </>
+    );
+  });
+
   React.useEffect(() => {
-    console.log(isReady);
     if (!isReady) return;
     if (favorIds.length === 0) {
       setLoading(false);
@@ -74,7 +148,7 @@ const Corner = () => {
         color={'#000'}
       >
         <Box display={'flex'} flex={1} px={2} py={1}>
-          MiAnime
+          關於我的追番日記
         </Box>
         <Box
           component={IconButton}
@@ -88,9 +162,6 @@ const Corner = () => {
         </Box>
       </Box>
       <Box p={2}>
-        <Typography variant="h4" gutterBottom>
-          我的追番日記
-        </Typography>
         {loading ? (
           <Box p={2} display={'flex'} justifyContent={'center'}>
             <Loading />
@@ -106,38 +177,7 @@ const Corner = () => {
         ) : (
           animes.map((anime) => (
             <React.Fragment key={anime.id}>
-              <Box
-                display="flex"
-                justifyContent={'space-between'}
-                alignItems={'center'}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
-                  <Typography
-                    component="a"
-                    href={anime.platform[0].href}
-                    variant="h6"
-                    key={anime.id}
-                    sx={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      '&:hover': { fontWeight: 'bold' },
-                    }}
-                  >
-                    {anime.title}
-                  </Typography>
-                  <Typography variant="body1" sx={{ mb: '3px' }}>
-                    {episodeWated[anime.id]
-                      ? '已看 ' +
-                        episodeWated[anime.id] +
-                        '/' +
-                        getEpisodeCount(anime)
-                      : '未看'}
-                  </Typography>
-                </Box>
-                <IconButton sx={{ color: 'white' }}>
-                  <KeyboardArrowDown />
-                </IconButton>
-              </Box>
+              <AnimeItem anime={anime} />
               <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.8)' }} />
             </React.Fragment>
           ))
