@@ -328,8 +328,8 @@ const Settings: React.FC = () => {
                   onSelect={() => handleSelect(DefaultBG)}
                 />
               </Grid>
-              {backgrounds.map((bg) => (
-                <Grid size={4}>
+              {backgrounds.map((bg, i) => (
+                <Grid size={4} key={i}>
                   <ImageCard
                     key={bg.id}
                     src={bg.url}
@@ -355,6 +355,17 @@ const Settings: React.FC = () => {
           />
         </CardContent>
       </Card>
+      <Typography
+        variant="subtitle2"
+        gutterBottom
+        color="text.secondary"
+        sx={{ '& a': { color: 'primary.main' } }}
+      >
+        資料來源：
+        <a href="https://acgsecrets.hk/bangumi/">ACG Secrets.HK</a>
+        {' & '}
+        <a href="https://bangumi.tv/">Bangumi 番组计划</a>
+      </Typography>
       <UploadDialog
         open={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}

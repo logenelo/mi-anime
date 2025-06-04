@@ -125,14 +125,16 @@ const createWindow = async () => {
   // eslint-disable-next-line
   new AppUpdater();
 
-  // Listen for theme change events from the renderer process
-  ipcMain.on('theme-change', (event, palette) => {
-    mainWindow?.setTitleBarOverlay({
-      color: palette.background.default,
-      symbolColor: palette.primary.dark,
-      height: 32,
+  if (process.platform !== 'darwin') {
+    // Listen for theme change events from the renderer process
+    ipcMain.on('theme-change', (event, palette) => {
+      mainWindow?.setTitleBarOverlay({
+        color: palette.background.default,
+        symbolColor: palette.primary.dark,
+        height: 32,
+      });
     });
-  });
+  }
 };
 
 /**

@@ -13,7 +13,7 @@ import './App.css';
 import { initDB } from 'react-indexed-db-hook';
 import { DBConfig } from './DBConfig';
 import { DetailProvider } from './contexts/AnimeDetailContext';
-import { ThemeProvider, useTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import useCustomSetting from './hooks/useCustomSetting';
 import { ThemeMode } from './types/setting';
 import getTheme from './theme';
@@ -63,7 +63,6 @@ const App: React.FC = () => {
   const [themeMode, themeColor, themeToggler, colorToggler] = useDarkMode();
   const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
 
-  React.useEffect(() => {}, []);
   return (
     <Router>
       <Routes>

@@ -3,6 +3,9 @@ import { Box, Container, useTheme } from '@mui/material';
 import BottomNavBar from './BottomNavBar';
 import DefaultBG from '../../../assets/background/background-1.jpg';
 import AnimeDetailDrawer from './AnimeDetailDrawer';
+import { animesCrawler } from '../services/animeHelper';
+import { addAnimes, crawlAnimes, deleteAnime, fetchUrl } from '../services/api';
+import * as cheerio from 'cheerio';
 
 type MainProps = {
   children: React.ReactNode;

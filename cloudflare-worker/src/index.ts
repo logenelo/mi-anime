@@ -1,4 +1,4 @@
-import { Router } from './router';
+import { Router, Handler } from './router';
 import {
 	listAnimes,
 	createAnimes,
@@ -7,10 +7,10 @@ import {
 	listAnimesByIds,
 	getAnimesByYearAndSeason,
 	crawlSeasonAnimes,
-	deleteAnimes,
 	getAnimeById,
 } from './handlers/anime';
 import test from './handlers/htmlParser';
+import {fetchUrl} from  './handlers/handlers'
 
 export interface Env {
 	ANIME: KVNamespace;
@@ -20,8 +20,9 @@ const router = new Router();
 
 router
 	.get('/anime', listAnimes)
-	.get('/anime/:year/:season', getAnimesByYearAndSeason)
-	.get('/anime/:id', getAnimeById)
+	.get('/anime/fetch', fetchUrl)
+	.get('/anime/get/:year/:season', getAnimesByYearAndSeason)
+	.get('/anime/get/:id', getAnimeById)
 	.get('/test', test)
 	.post('/anime', createAnimes)
 	.post('/anime/crawl', crawlSeasonAnimes)

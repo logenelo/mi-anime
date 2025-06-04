@@ -44,10 +44,10 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
     const fetchData = async () => {
       // Fetch anime details
       const resp = await getAnimeById(id);
-      if (resp.statusCode === 200) {
+      if (resp?.statusCode === 200) {
         setAnime(resp.anime);
       } else {
-        setError(resp.message || 'Failed to fetch anime details');
+        setError(resp || 'Failed to fetch anime details');
       }
     };
 

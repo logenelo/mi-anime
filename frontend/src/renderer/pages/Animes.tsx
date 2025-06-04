@@ -74,7 +74,9 @@ const Animes: React.FC = () => {
         (!year || anime.year === year) &&
         (!season || anime.season === season) &&
         (!debouncedSearchText ||
-          anime.title.toLowerCase().includes(debouncedSearchText.toLowerCase()))
+          anime?.title
+            .toLowerCase()
+            .includes(debouncedSearchText.toLowerCase()))
       );
     });
 

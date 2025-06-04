@@ -1,7 +1,8 @@
+import { get } from 'http';
 import type { Anime, Season } from '../types/anime';
 import { animesCrawler } from './animeHelper';
 
-const isDev = false;
+const isDev = true;
 const url = isDev
   ? 'http://localhost:8787/anime'
   : 'https://api.genelo.org/anime';
@@ -65,7 +66,7 @@ export const getAllAnimes = () => {
   return getMethod(`${url}`);
 };
 export const getAnimeById = (id: string) => {
-  return getMethod(`${url}/${id}`);
+  return getMethod(`${url}/get/${id}`);
 };
 export const getAnimeByIds = (ids: string[]) => {
   return postMethod(`${url}/ids`, { ids });
@@ -79,7 +80,7 @@ export const crawlAnimes = (year: number, season: Season) => {
 };
 
 export const getAnimesByYearAndSeason = (year: number, season: Season) => {
-  return getMethod(`${url}/${year}/${season}`).then(async (resp) => {
+  return getMethod(`${url}/get/${year}/${season}`).then(async (resp) => {
     if (resp?.animes.length === 0) {
       const animes = await animesCrawler(year, season);
     
@@ -105,3 +106,20 @@ export const getSeasonAnimes = () => {
 
   return getAnimesByYearAndSeason(currentYear, currentSeason);
 };
+
+export const fetchUrl = (targetUrl:string) =>{
+  return fetch(`${url}/fetch?url=${targetUrl}`).then((response) => response.text());
+}
+
+export const deleteAnime = (id: string) => {
+  return fetch(`${url}/${id}`, {
+    method: 'DELETE',
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      return data;
+    })
+    .catch((error) => {
+      console.error('Error fetching animes:', error);
+    });
+}

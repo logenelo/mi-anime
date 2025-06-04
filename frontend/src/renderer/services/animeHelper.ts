@@ -1,7 +1,13 @@
 /* eslint-disable import/prefer-default-export */
 import * as cheerio from 'cheerio';
-import { Anime, Season } from '../types/anime';
-import { crawlAnimes } from './api';
+import {
+  Anime,
+  Season
+} from '../types/anime';
+import {
+  crawlAnimes,
+  fetchUrl
+} from './api';
 
 export const WEEKDAY_NAMES = [
   '日',
@@ -11,7 +17,8 @@ export const WEEKDAY_NAMES = [
   '四',
   '五',
   '六',
-] as const;
+] as
+const;
 type WeekdayNames = (typeof WEEKDAY_NAMES)[number];
 
 export const getWeekdayLabel = (day: number) => {
@@ -22,10 +29,13 @@ export const animesCrawler = async (year: number, season: Season) => {
   console.log('crawling animes', year, season);
   const html = await crawlAnimes(year, season);
   const $ = cheerio.load(html);
-  const animes: Anime[] = [];
+  const animes: Array<Anime & { link?: string }> = [];
+  
 
   const cards = $('#acgs-anime-icons').find('.acgs-card');
-  cards.each((_, element) => {
+
+
+  await cards.each((_, element) => {
     const icon = $(element);
     const id = icon.attr('acgs-bangumi-data-id');
     const dateToday = icon.attr('datetoday');
@@ -53,9 +63,8 @@ export const animesCrawler = async (year: number, season: Season) => {
         let href = siteElement.attr('href') || '';
         const site = $(item).find('.steam-site-name').text().trim();
         if (!href) {
-          const sitesMap: Record<string, string> = {
-            巴哈姆特動畫瘋:
-              'https://ani.gamer.com.tw/search.php?keyword=' + title,
+          const sitesMap: Record < string, string > = {
+            巴哈姆特動畫瘋: 'https://ani.gamer.com.tw/search.php?keyword=' + title,
             愛奇藝: `https://www.iq.com/search?query=${title}&originInput=`,
             Netflix: `https://www.netflix.com/search?q=${title}`,
           };
@@ -70,8 +79,14 @@ export const animesCrawler = async (year: number, season: Season) => {
       .get()
       .filter((p) => p.value); // Filter out empty platform names
 
+
     // Default episode count (most seasonal anime are 12-13 episodes)
-    const episode = dateToday === '跨季續播' ? 24 : 12;
+    //let episode = dateToday === '跨季續播' ? 24 : 12;
+    const link = card.find('a.bgmtv').first().attr('href') || '';
+  
+    const episode = dateToday === '跨季續播' ? 24 : 12;;
+
+
 
     animes.push({
       id: `${id?.split('-')[1]}`,
@@ -84,10 +99,31 @@ export const animesCrawler = async (year: number, season: Season) => {
       year,
       season,
       episode,
+      link
     });
-  });
+  })
+  const updatedAnimes = await Promise.all(
+    animes.map(async (anime) => {
+      if (anime.link) {
+        anime.episode = await fetchUrl(anime.link).then((html) => {
+          const $ = cheerio.load(html);
+          const result = $('#infobox')
+            .find('li:contains("话数")')
+            .first()
+            .text()
+            .trim();
 
-  return animes;
+          return Number(result.split(':')[1].trim());
+        });
+      }
+      delete anime.link; // Remove link after fetching episode count
+      return anime;
+    })
+  );
+   
+  
+  
+   return updatedAnimes
 };
 
 export const getEpisodeCount = (anime: Anime) => {

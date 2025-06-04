@@ -64,7 +64,7 @@ export async function listAnimes(request: Request, env: Env, ctx: ExecutionConte
 }
 
 export async function getAnimeById(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const id = new URL(request.url).pathname.split('/')[2];
+  const { id } = request.params; 
   const anime = await env.ANIME.get(id);
   
   if (!anime) {
