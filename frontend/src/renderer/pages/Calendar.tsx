@@ -15,15 +15,16 @@ import { Anime } from '../types/anime';
 function ServerDay(props: PickersDayProps & { highlightedDays?: string[] }) {
   const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
   const isSelected =
-    !props.outsideCurrentMonth && highlightedDays.includes(day.toString());
-
+    !props.outsideCurrentMonth &&
+    highlightedDays.includes(day.toFormat('yyyy-MM-dd'));
+  console.log(highlightedDays, day.toFormat('yyyy-MM-dd'));
   console.log(
     !props.outsideCurrentMonth,
-    highlightedDays.includes(day.toString()),
+    highlightedDays.includes(day.toFormat('yyyy-MM-dd')),
   );
   return (
     <Badge
-      key={props.day.toString()}
+      key={props.day.toFormat('yyyy-MM-dd')}
       overlap="circular"
       badgeContent={
         isSelected ? (
@@ -82,10 +83,11 @@ const Calendar: React.FC = () => {
               date = date.plus({ weeks: 1 })
             ) {
               const data = { title: anime.title, episode: i };
-              if (highlightData[date.toString()]) {
-                highlightData[date.toString()].push(data);
+              const key = date.toFormat('yyyy-MM-dd');
+              if (highlightData[key]) {
+                highlightData[key].push(data);
               } else {
-                highlightData[date.toString()] = [data];
+                highlightData[key] = [data];
               }
               i++;
             }
@@ -107,33 +109,50 @@ const Calendar: React.FC = () => {
       >
         日歷
       </Typography>
-      <Paper elevation={3}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <DateCalendar
-            value={selectedDate}
-            showDaysOutsideCurrentMonth
-            onChange={handleDateChange}
-            slots={{
-              day: ServerDay,
-            }}
-            slotProps={{
-              day: {
-                highlightedDays,
-              } as any,
-            }}
-            sx={{
-              '& .MuiDayCalendar-weekContainer': {
-                borderTop: '1px solid ' + theme.palette.divider,
-              },
-            }}
-          />
-        </LocalizationProvider>
+      <Paper
+        elevation={3}
+        sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}
+      >
+        <Box>
+          <LocalizationProvider dateAdapter={AdapterLuxon}>
+            <DateCalendar
+              value={selectedDate}
+              showDaysOutsideCurrentMonth
+              onChange={handleDateChange}
+              slots={{
+                day: ServerDay,
+              }}
+              slotProps={{
+                day: {
+                  highlightedDays,
+                } as any,
+              }}
+              sx={{
+                '& .MuiDayCalendar-weekContainer': {
+                  borderTop: '1px solid ' + theme.palette.divider,
+                },
+              }}
+            />
+          </LocalizationProvider>
+        </Box>
+        <Box p={2}>
+          <Typography
+            variant="h6"
+            color="textSecondary"
+            fontWeight="600"
+            gutterBottom
+          >
+            {selectedDate.toFormat('yyyy-MM-dd')}
+          </Typography>
+          {(highlightData?.[selectedDate.toFormat('yyyy-MM-dd')] || []).map(
+            (data: any) => (
+              <Typography key={data.title + data.episode} variant="body1">
+                {data.title} 第 {data.episode} 集
+              </Typography>
+            ),
+          )}
+        </Box>
       </Paper>
-      {selectedDate && (
-        <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
-          選擇的日期是：{selectedDate.toFormat('yyyy-MM-dd')}
-        </Typography>
-      )}
     </Box>
   );
 };

@@ -35,11 +35,11 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let cornerWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
+// ipcMain.on('ipc-example', async (event, arg) => {
+//   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
+//   console.log(msgTemplate(arg));
+//   event.reply('ipc-example', msgTemplate('pong'));
+// });
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -66,18 +66,18 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
+const RESOURCES_PATH = app.isPackaged
+  ? path.join(process.resourcesPath, 'assets')
+  : path.join(__dirname, '../../assets');
+
+const getAssetPath = (...paths: string[]): string => {
+  return path.join(RESOURCES_PATH, ...paths);
+};
+
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
 
   mainWindow = new BrowserWindow({
     show: false,
@@ -145,7 +145,7 @@ app.on('ready', () => {
   createWindow();
 
   // Create the tray icon
-  const trayIconPath = path.join(__dirname, '../../assets/tray-icon.png'); // Replace with your tray icon path
+  const trayIconPath = getAssetPath('tray-icon.png'); // Replace with your tray icon path
   tray = new Tray(trayIconPath);
 
   // Create a context menu for the tray
@@ -193,11 +193,21 @@ app.on('ready', () => {
           preload: app.isPackaged
             ? path.join(__dirname, 'preload.js')
             : path.join(__dirname, '../../.erb/dll/preload.js'),
+          contextIsolation: true,
+          nodeIntegration: false,
         },
       });
 
       cornerWindow.loadURL(resolveHtmlPath('corner.html')); // Load your custom HTML
-
+      // Open urls in the user's browser
+      cornerWindow.webContents.setWindowOpenHandler((edata) => {
+        shell.openExternal(edata.url);
+        return { action: 'deny' };
+      });
+      cornerWindow.webContents.on('will-navigate', (event, url) => {
+        event.preventDefault();
+        shell.openExternal(url);
+      });
       cornerWindow.on('closed', () => {
         cornerWindow = null;
       });

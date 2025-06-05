@@ -64,29 +64,29 @@ const App: React.FC = () => {
   const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          element={
-            <DetailProvider>
-              <ThemeProvider theme={theme}>
+    <DetailProvider>
+      <ThemeProvider theme={theme}>
+        <Router>
+          <Routes>
+            <Route
+              element={
                 <Main>
                   <Outlet />
                 </Main>
-              </ThemeProvider>
-            </DetailProvider>
-          }
-        >
-          <Route path="/" element={<Home />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/animes" element={<Animes />} />
-          {/* Redirect any unknown paths to the home page */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </Router>
+              }
+            >
+              <Route path="/" element={<Home />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/animes" element={<Animes />} />
+              {/* Redirect any unknown paths to the home page */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </Router>{' '}
+      </ThemeProvider>
+    </DetailProvider>
   );
 };
 

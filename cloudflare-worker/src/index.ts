@@ -9,8 +9,7 @@ import {
 	crawlSeasonAnimes,
 	getAnimeById,
 } from './handlers/anime';
-import test from './handlers/htmlParser';
-import {fetchUrl} from  './handlers/handlers'
+import { fetchUrl } from './handlers/handlers';
 
 export interface Env {
 	ANIME: KVNamespace;
@@ -23,7 +22,6 @@ router
 	.get('/anime/fetch', fetchUrl)
 	.get('/anime/get/:year/:season', getAnimesByYearAndSeason)
 	.get('/anime/get/:id', getAnimeById)
-	.get('/test', test)
 	.post('/anime', createAnimes)
 	.post('/anime/crawl', crawlSeasonAnimes)
 	.post('/anime/ids', listAnimesByIds)
@@ -31,7 +29,6 @@ router
 	.delete('/anime/:id', deleteAnime);
 
 //.delete('/anime', deleteAnimes);
-
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -42,8 +39,7 @@ export default {
 			return new Response(err.message, { status: 500 });
 		}
 	},
-	 async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-		
-    console.log("cron processed");
-  },
+	//  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+	// 	console.log("cron processed");
+	// },
 } satisfies ExportedHandler<Env>;

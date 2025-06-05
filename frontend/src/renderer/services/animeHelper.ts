@@ -1,13 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 import * as cheerio from 'cheerio';
-import {
-  Anime,
-  Season
-} from '../types/anime';
-import {
-  crawlAnimes,
-  fetchUrl
-} from './api';
+import { Anime, Season } from '../types/anime';
+import { crawlAnimes, fetchUrl } from './api';
 
 export const WEEKDAY_NAMES = [
   '日',
@@ -17,8 +11,7 @@ export const WEEKDAY_NAMES = [
   '四',
   '五',
   '六',
-] as
-const;
+] as const;
 type WeekdayNames = (typeof WEEKDAY_NAMES)[number];
 
 export const getWeekdayLabel = (day: number) => {
@@ -30,10 +23,8 @@ export const animesCrawler = async (year: number, season: Season) => {
   const html = await crawlAnimes(year, season);
   const $ = cheerio.load(html);
   const animes: Array<Anime & { link?: string }> = [];
-  
 
   const cards = $('#acgs-anime-icons').find('.acgs-card');
-
 
   await cards.each((_, element) => {
     const icon = $(element);
@@ -63,8 +54,9 @@ export const animesCrawler = async (year: number, season: Season) => {
         let href = siteElement.attr('href') || '';
         const site = $(item).find('.steam-site-name').text().trim();
         if (!href) {
-          const sitesMap: Record < string, string > = {
-            巴哈姆特動畫瘋: 'https://ani.gamer.com.tw/search.php?keyword=' + title,
+          const sitesMap: Record<string, string> = {
+            巴哈姆特動畫瘋:
+              'https://ani.gamer.com.tw/search.php?keyword=' + title,
             愛奇藝: `https://www.iq.com/search?query=${title}&originInput=`,
             Netflix: `https://www.netflix.com/search?q=${title}`,
           };
@@ -79,14 +71,13 @@ export const animesCrawler = async (year: number, season: Season) => {
       .get()
       .filter((p) => p.value); // Filter out empty platform names
 
-
     // Default episode count (most seasonal anime are 12-13 episodes)
     //let episode = dateToday === '跨季續播' ? 24 : 12;
     const link = card.find('a.bgmtv').first().attr('href') || '';
-  
-    const episode = dateToday === '跨季續播' ? 24 : 12;;
 
-    const newAnime:any = {
+    const episode = dateToday === '跨季續播' ? 24 : 12;
+
+    const newAnime: any = {
       id: `${id?.split('-')[1]}`,
       title,
       description,
@@ -97,14 +88,14 @@ export const animesCrawler = async (year: number, season: Season) => {
       year,
       season,
       episode,
-      link
+      link,
     };
-    if (dateToday === '跨季續播'){
+    if (dateToday === '跨季續播') {
       delete newAnime.year;
-      delete newAnime.season
+      delete newAnime.season;
     }
     animes.push(newAnime);
-  })
+  });
   const updatedAnimes = await Promise.all(
     animes.map(async (anime) => {
       if (anime.link) {
@@ -113,20 +104,26 @@ export const animesCrawler = async (year: number, season: Season) => {
           const result = $('#infobox')
             .find('li:contains("话数")')
             .first()
-            .text()
-            .trim();
+            .text();
+          const episode = parseInt(result.split(':')[1]);
+          if (isNaN(episode)) {
+            const result = $('ul.prg_list li').last().text();
 
-          return Number(result.split(':')[1].trim());
+            const episode = parseInt(result);
+            console.log('*', anime.title, episode);
+            return episode ? episode : anime.episode;
+          } else {
+            console.log(anime.title, episode);
+            return episode;
+          }
         });
       }
       delete anime.link; // Remove link after fetching episode count
       return anime;
-    })
+    }),
   );
-   
-  
-  
-   return updatedAnimes
+
+  return updatedAnimes;
 };
 
 export const getEpisodeCount = (anime: Anime) => {
@@ -138,8 +135,8 @@ export const getEpisodeCount = (anime: Anime) => {
   return Math.min(episodeCount, anime.episode);
 };
 
-export const getSeasonCode = (date: Date):[number,Season] => {
-    const currentYear = date.getFullYear();
+export const getSeasonCode = (date: Date): [number, Season] => {
+  const currentYear = date.getFullYear();
   const currentMonth = date.getMonth() + 1; // Months are 0-indexed, so add 1
 
   // Map months to seasons
@@ -147,10 +144,10 @@ export const getSeasonCode = (date: Date):[number,Season] => {
     currentMonth <= 3
       ? 1 // Winter
       : currentMonth <= 6
-      ? 4 // Spring
-      : currentMonth <= 9
-      ? 7 // Summer
-      : 10; // Fall
+        ? 4 // Spring
+        : currentMonth <= 9
+          ? 7 // Summer
+          : 10; // Fall
 
   return [currentYear, currentSeason];
 };

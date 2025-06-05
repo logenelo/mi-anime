@@ -13,9 +13,19 @@ import {
 } from '@mui/material';
 import AnimeCard from '../components/AnimeCard';
 import { Anime, Season, SEASONS } from '../types/anime';
-import { getAllAnimes, getAnimesByYearAndSeason } from '../services/api';
+import {
+  addAnimes,
+  getAllAnimes,
+  getAnimesByYearAndSeason,
+} from '../services/api';
 import { Search } from '@mui/icons-material';
 import Loading from '../components/Loading';
+import useElementOnScreen from '../hooks/useElementOnScreen';
+import useDebounce from '../hooks/useDebounce';
+import { animesCrawler, getSeasonCode } from '../services/animeHelper';
+import { DateTime } from 'luxon';
+
+const PAGE_SIZE = 50;
 
 const CURRENT_YEAR = new Date().getFullYear();
 const START_YEAR = 2020;
@@ -29,24 +39,17 @@ const Animes: React.FC = () => {
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [year, setYear] = useState<number>(0);
   const [season, setSeason] = useState<Season | 0>(0);
+
   const [searchText, setSearchText] = useState<string>('');
-  const [debouncedSearchText, setDebouncedSearchText] = useState<string>('');
+  const debouncedSearchText = useDebounce(searchText, 300);
 
-  // Debounce searchText
-  useEffect(() => {
-    if (animes.length === 0) return;
-    setLoading(true);
-    const handler = setTimeout(() => {
-      setDebouncedSearchText(searchText);
-      setLoading(false);
-    }, 300);
+  const [loadingRef, isVisible] = useElementOnScreen({
+    threshold: 0.1,
+  });
+  const [showAll, setShowAll] = useState(false);
+  const [page, setPage] = useState(1);
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchText]);
-
-  const addAnimes = useCallback(
+  const addNewAnimes = useCallback(
     async (year: number, season: Season) => {
       try {
         setLoading(true);
@@ -66,7 +69,12 @@ const Animes: React.FC = () => {
     [animes],
   );
 
+  // Filter
   const displayAnimes = useMemo(() => {
+    //reset page
+    setPage(1);
+    setShowAll(false);
+
     if (!year && !season && !debouncedSearchText) return animes;
     setLoading(true);
 
@@ -82,12 +90,13 @@ const Animes: React.FC = () => {
     });
 
     if (filteredAnimes.length === 0 && year && season) {
-      addAnimes(year, season);
+      addNewAnimes(year, season);
     }
     setLoading(false);
     return filteredAnimes;
-  }, [year, season, debouncedSearchText, addAnimes]);
+  }, [year, season, debouncedSearchText, animes]);
 
+  // Fetch animes
   useEffect(() => {
     const fetchAnimes = async () => {
       try {
@@ -97,6 +106,32 @@ const Animes: React.FC = () => {
             (a: Anime, b: Anime) => b.startDate - a.startDate,
           );
           setAnimes(sortedAnimes);
+          setLoading(false);
+
+          const lastUpdateTime = resp.lastUpdateTime;
+          const now = DateTime.now();
+          if (now.toMillis() - lastUpdateTime > 24 * 60 * 60 * 1000) {
+            const nowSeason = getSeasonCode(now.toJSDate());
+            const nextMonth = now.plus({ month: 1 });
+            const nextSeason = getSeasonCode(nextMonth.toJSDate());
+            const animes = await animesCrawler(nowSeason[0], nowSeason[1]);
+            if (animes && animes.length > 0) {
+              addAnimes(animes);
+            }
+
+            if (
+              nowSeason[0] !== nextSeason[0] ||
+              nowSeason[1] !== nextSeason[1]
+            ) {
+              const nextAnimes = await animesCrawler(
+                nextSeason[0],
+                nextSeason[1],
+              ); //Next Season
+              if (nextAnimes && nextAnimes.length > 0) {
+                addAnimes(nextAnimes);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching animes:', error);
@@ -107,6 +142,33 @@ const Animes: React.FC = () => {
 
     fetchAnimes();
   }, []);
+
+  // Debounce searchText
+  useEffect(() => {
+    if (animes.length === 0) return;
+    setLoading(true);
+  }, [searchText]);
+  useEffect(() => {
+    if (animes.length === 0) return;
+    setLoading(false);
+  }, [debouncedSearchText]);
+
+  // Pagination
+  const nextPage = () => {
+    setPage((prev) => {
+      return prev + 1;
+    });
+  };
+  useEffect(() => {
+    if (page * PAGE_SIZE >= displayAnimes.length) {
+      setShowAll(true);
+    }
+  }, [page]);
+  useEffect(() => {
+    if (isVisible) {
+      nextPage();
+    }
+  }, [isVisible]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -170,23 +232,27 @@ const Animes: React.FC = () => {
             />
           </FormControl>
         </Stack>
-        {loading ? (
-          <Box p={2} display="flex" justifyContent="center">
-            <Loading />
-          </Box>
-        ) : displayAnimes.length === 0 ? (
-          <Box sx={{ p: 2 }}>
-            <Typography color="textPrimary">找不到符合條件的動畫</Typography>
-          </Box>
-        ) : (
+        {!loading && (
           <Grid container spacing={2} columns={{ xs: 2, sm: 6, md: 10 }}>
-            {displayAnimes.map((anime) => (
+            {displayAnimes.slice(0, page * PAGE_SIZE).map((anime) => (
               <Grid size={2} key={anime.id}>
                 <AnimeCard anime={anime} variant="grid" />
               </Grid>
             ))}
+            <Grid size={{ xs: 2, sm: 6, md: 10 }}></Grid>
           </Grid>
         )}
+        <Box ref={loadingRef} p={2} display="flex" justifyContent="center">
+          {loading ? (
+            <Loading />
+          ) : displayAnimes.length === 0 ? (
+            <Typography color="textPrimary">找不到符合條件的動畫</Typography>
+          ) : showAll ? (
+            '沒有更多了'
+          ) : (
+            <Loading />
+          )}
+        </Box>
       </Stack>
     </Box>
   );

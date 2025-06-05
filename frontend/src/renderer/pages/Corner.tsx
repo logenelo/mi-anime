@@ -39,10 +39,15 @@ const Corner = () => {
 
   const AnimeItem = memo(({ anime }: { anime: Anime }) => {
     const [expanded, setExpanded] = React.useState(false);
-    const platforms = anime.platform.filter(
-      (item) => item.region === 'HK' && item.href,
-    );
-    console.log(anime.platform);
+    const platforms = anime.platform
+      .filter((item) => item.region === 'HK' && item.href)
+      .concat([
+        {
+          value: '其他',
+          href: 'https://anime1.cc/search?q=' + anime.title,
+          region: 'HK',
+        },
+      ]);
     return (
       <>
         <Box
@@ -50,7 +55,7 @@ const Corner = () => {
           justifyContent={'space-between'}
           alignItems={'center'}
         >
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+          <Box>
             <Typography
               component="a"
               href={platforms?.[0]?.href}
@@ -63,8 +68,12 @@ const Corner = () => {
               }}
             >
               {anime.title}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: '3px' }}>
+            </Typography>{' '}
+            <Typography
+              component={'span'}
+              variant="body1"
+              sx={{ mb: '3px', display: 'inline-block' }}
+            >
               {episodeWated[anime.id]
                 ? '已看 ' +
                   episodeWated[anime.id] +

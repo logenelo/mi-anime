@@ -6,7 +6,7 @@ const isDev = false;
 const url = isDev
   ? 'http://localhost:8787/anime'
   : 'https://api.genelo.org/anime';
-  //: 'https://cloudflare-worker.genelo5513.workers.dev/anime';
+//: 'https://cloudflare-worker.genelo5513.workers.dev/anime';
 
 const getMethod = (url: string, body?: any) => {
   const params = new URLSearchParams();
@@ -83,7 +83,7 @@ export const getAnimesByYearAndSeason = (year: number, season: Season) => {
   return getMethod(`${url}/get/${year}/${season}`).then(async (resp) => {
     if (resp?.animes.length === 0) {
       const animes = await animesCrawler(year, season);
-    
+
       if (animes && animes.length > 0) {
         const result = await addAnimes(animes);
         return result;
@@ -100,14 +100,16 @@ export const getAnimesByYearAndSeason = (year: number, season: Season) => {
 
 export const getSeasonAnimes = () => {
   const date = new Date();
-  const [currentYear, currentSeason] = getSeasonCode(date)
+  const [currentYear, currentSeason] = getSeasonCode(date);
 
   return getAnimesByYearAndSeason(currentYear, currentSeason);
 };
 
-export const fetchUrl = (targetUrl:string) =>{
-  return fetch(`${url}/fetch?url=${targetUrl}`).then((response) => response.text());
-}
+export const fetchUrl = (targetUrl: string) => {
+  return fetch(`${url}/fetch?url=${targetUrl}`).then((response) =>
+    response.text(),
+  );
+};
 
 export const deleteAnime = (id: string) => {
   return fetch(`${url}/${id}`, {
@@ -120,4 +122,4 @@ export const deleteAnime = (id: string) => {
     .catch((error) => {
       console.error('Error fetching animes:', error);
     });
-}
+};

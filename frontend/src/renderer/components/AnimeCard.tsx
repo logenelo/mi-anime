@@ -16,7 +16,6 @@ interface AnimeCardProps {
 const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
   const isGrid = variant === 'grid';
 
-  const navigate = useNavigate();
   const { handleOpen } = React.useContext(AnimeDetailContext);
   const startDate = React.useMemo(() => {
     if (!anime.startDate) return '未定';
@@ -33,6 +32,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
           height={250}
           image={anime.cover}
           alt={anime.title}
+          loading="lazy"
           sx={{ objectFit: 'cover' }}
         />
         <Box
@@ -72,6 +72,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
             height: '100%',
             objectFit: 'cover',
           }}
+          loading="lazy"
           image={anime.cover}
           alt={anime.title}
         />
@@ -144,6 +145,8 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
     );
   };
 
+  React.useEffect(() => {}, []);
+
   return (
     <Card
       onClick={() => {
@@ -157,6 +160,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
         height: '100%',
         flexDirection: 'row',
         transition: 'all 0.2s ease-in-out',
+        contentVisibility: 'auto',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: (theme) => theme.shadows[8],
