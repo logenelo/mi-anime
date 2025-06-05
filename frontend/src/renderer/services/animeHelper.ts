@@ -86,9 +86,7 @@ export const animesCrawler = async (year: number, season: Season) => {
   
     const episode = dateToday === '跨季續播' ? 24 : 12;;
 
-
-
-    animes.push({
+    const newAnime:any = {
       id: `${id?.split('-')[1]}`,
       title,
       description,
@@ -100,7 +98,12 @@ export const animesCrawler = async (year: number, season: Season) => {
       season,
       episode,
       link
-    });
+    };
+    if (dateToday === '跨季續播'){
+      delete newAnime.year;
+      delete newAnime.season
+    }
+    animes.push(newAnime);
   })
   const updatedAnimes = await Promise.all(
     animes.map(async (anime) => {
@@ -133,4 +136,21 @@ export const getEpisodeCount = (anime: Anime) => {
   const episodeCount =
     Math.floor((date.getTime() - Number(anime.startDate)) / 604800000) + 1;
   return Math.min(episodeCount, anime.episode);
+};
+
+export const getSeasonCode = (date: Date):[number,Season] => {
+    const currentYear = date.getFullYear();
+  const currentMonth = date.getMonth() + 1; // Months are 0-indexed, so add 1
+
+  // Map months to seasons
+  const currentSeason =
+    currentMonth <= 3
+      ? 1 // Winter
+      : currentMonth <= 6
+      ? 4 // Spring
+      : currentMonth <= 9
+      ? 7 // Summer
+      : 10; // Fall
+
+  return [currentYear, currentSeason];
 };

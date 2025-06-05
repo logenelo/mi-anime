@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   IconButton,
   Icon,
   Grid,
+  Alert,
 } from '@mui/material';
 import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
 
@@ -26,6 +27,13 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
   const [anime, setAnime] = React.useState<Anime>();
   const { isReady, watch, getEpisodeWatched } = useFavoriteList();
   const [watched, setWatched] = React.useState<number>(0);
+
+  const startDate = useMemo(() => {
+    if (!anime) return '';
+    if (!anime.startDate) return '未定';
+    const date = new Date(Number(anime.startDate));
+    return dateFormater(date);
+  }, [anime?.startDate]);
 
   React.useEffect(() => {
     if (!isReady || !id) return;
@@ -47,7 +55,7 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
       if (resp?.statusCode === 200) {
         setAnime(resp.anime);
       } else {
-        setError(resp || 'Failed to fetch anime details');
+        setError(resp || '錯誤：無法獲取動畫資料');
       }
     };
 
@@ -63,6 +71,13 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
     }
   };
 
+  if (error) {
+    return (
+      <Box p={2}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
   if (!anime || loading) {
     return (
       <Box p={2} display={'flex'} justifyContent={'center'}>
@@ -101,7 +116,7 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
             {SEASONS.find((s) => s.value === anime.season)?.label}
           </Typography>
           <Typography variant="body1" gutterBottom>
-            開播日期：{dateFormater(new Date(Number(anime.startDate)))}
+            開播日期：{startDate}
           </Typography>
           <Stack direction="row" spacing={1} mb={'0.35em'}>
             <Typography variant="body1" gutterBottom>

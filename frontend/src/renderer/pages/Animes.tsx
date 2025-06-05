@@ -69,6 +69,7 @@ const Animes: React.FC = () => {
   const displayAnimes = useMemo(() => {
     if (!year && !season && !debouncedSearchText) return animes;
     setLoading(true);
+
     const filteredAnimes = animes.filter((anime) => {
       return (
         (!year || anime.year === year) &&

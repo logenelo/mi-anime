@@ -19,6 +19,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
   const navigate = useNavigate();
   const { handleOpen } = React.useContext(AnimeDetailContext);
   const startDate = React.useMemo(() => {
+    if (!anime.startDate) return '未定';
     const date = new Date(Number(anime.startDate));
     return dateFormater(date);
   }, [anime.startDate]);

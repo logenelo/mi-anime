@@ -4,6 +4,7 @@ import AnimeList from '../components/AnimeList';
 import { getSeasonAnimes } from '../services/api';
 import { Anime } from '../types/anime';
 import Loading from '../components/Loading';
+import { getSeasonCode } from '../services/animeHelper';
 const Home: React.FC = () => {
   // 範例動畫資料
   const [animeList, setAnimeList] = React.useState<Anime[]>([]);
@@ -15,20 +16,13 @@ const Home: React.FC = () => {
         .then((resp) => {
           if (resp.statusCode === 200) {
             const date = new Date();
-            const currentYear = date.getFullYear();
-            const currentSeason = Math.floor(
-              (date.getMonth() + 1) / 3,
-            ) as number;
-            const seasonCode = currentYear * 100 + currentSeason;
+            const [year, season] = getSeasonCode(date);
+
+            const seasonCode = year * 100 + season;
 
             const filteredList = resp.animes
               .map((item: Anime) => {
-                const itemDate = new Date(Number(item.startDate));
-                const year = itemDate.getFullYear();
-                const season = Math.floor(
-                  (itemDate.getMonth() + 1) / 3,
-                ) as number;
-                return year * 100 + season < seasonCode
+                return item.year * 100 + item.season < seasonCode
                   ? { ...item, isContin: true }
                   : item;
               })

@@ -32,6 +32,7 @@ router
 
 //.delete('/anime', deleteAnimes);
 
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		try {
@@ -41,4 +42,8 @@ export default {
 			return new Response(err.message, { status: 500 });
 		}
 	},
+	 async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+		
+    console.log("cron processed");
+  },
 } satisfies ExportedHandler<Env>;

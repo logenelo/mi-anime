@@ -30,9 +30,9 @@ export type Anime = {
   weekday: number; // 0-6 代表週日到週六
   platform: Platform[];
   cover: string;
+  episode: number;
   year: number;
   season: Season;
-  episode: number;
 
   createdAt?: number;
   updatedAt?: number;
