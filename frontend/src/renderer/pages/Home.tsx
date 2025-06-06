@@ -11,33 +11,29 @@ const Home: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    try {
-      getSeasonAnimes()
-        .then((resp) => {
-          if (resp.statusCode === 200) {
-            const date = new Date();
-            const [year, season] = getSeasonCode(date);
+    getSeasonAnimes()
+      .then((resp) => {
+        if (resp.statusCode === 200) {
+          const date = new Date();
+          const [year, season] = getSeasonCode(date);
 
-            const seasonCode = year * 100 + season;
+          const seasonCode = year * 100 + season;
 
-            const filteredList = resp.animes
-              .map((item: Anime) => {
-                return item.year * 100 + item.season < seasonCode
-                  ? { ...item, isContin: true }
-                  : item;
-              })
-              .sort((a: Anime, b: Anime) => b.startDate - a.startDate);
-            setAnimeList(filteredList);
-          } else {
-            console.error('Error fetching anime data:', resp.message);
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } catch (error) {
-      console.error('Error fetching anime data:', error);
-    }
+          const filteredList = resp.animes
+            .map((item: Anime) => {
+              return item.year * 100 + item.season < seasonCode
+                ? { ...item, isContin: true }
+                : item;
+            })
+            .sort((a: Anime, b: Anime) => b.startDate - a.startDate);
+          setAnimeList(filteredList);
+        } else {
+          console.error('Error fetching anime data:', resp.message);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return (

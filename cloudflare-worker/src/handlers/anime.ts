@@ -214,7 +214,7 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 			};
 		})
 	);
-	env.ANIME.put('lastUpdateTime', new Date().getTime().toString());
+	await env.ANIME.put('lastUpdateTime', new Date().getTime().toString());
 	const response = {
 		statusCode: 200,
 		animes: results,

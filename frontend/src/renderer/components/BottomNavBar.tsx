@@ -1,5 +1,4 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Paper from '@mui/material/Paper';
@@ -8,6 +7,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import StarIcon from '@mui/icons-material/Star';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import RouterContext from '../contexts/RouterContext';
 
 const navItems = [
   {
@@ -28,14 +28,10 @@ const navItems = [
 ];
 
 const BottomNavBar: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
+  const { navigate, route } = React.useContext(RouterContext);
   // 根據當前路徑決定選中的 tab
   const currentIndex = navItems.findIndex((item) =>
-    item.path === '/'
-      ? location.pathname === '/'
-      : location.pathname.startsWith(item.path),
+    item.path === '/' ? route === '/' : route.startsWith(item.path),
   );
 
   return (

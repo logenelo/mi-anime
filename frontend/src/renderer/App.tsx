@@ -17,6 +17,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import useCustomSetting from './hooks/useCustomSetting';
 import { ThemeMode } from './types/setting';
 import getTheme from './theme';
+import RouterContext from './contexts/RouterContext';
 
 initDB(DBConfig);
 
@@ -62,29 +63,33 @@ export const useDarkMode = (): [
 const App: React.FC = () => {
   const [themeMode, themeColor, themeToggler, colorToggler] = useDarkMode();
   const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
-
+  const [route, setRoute] = React.useState<string>('/');
+  const routes: Record<string, JSX.Element> = {
+    '/': <Home />,
+    '/calendar': <Calendar />,
+    '/favorites': <Favorites />,
+    '/settings': <Settings />,
+    '/animes': <Animes />,
+  };
+  const navigate = (path: string) => {
+    setRoute(path);
+  };
+  const MainPage = () => {
+    return routes?.[route] || routes['/'];
+  };
+  React.useEffect(() => {
+    if (!Object.keys(routes).includes(route)) {
+      setRoute('/');
+    }
+  }, [route]);
   return (
     <DetailProvider>
       <ThemeProvider theme={theme}>
-        <Router>
-          <Routes>
-            <Route
-              element={
-                <Main>
-                  <Outlet />
-                </Main>
-              }
-            >
-              <Route path="/" element={<Home />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/favorites" element={<Favorites />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/animes" element={<Animes />} />
-              {/* Redirect any unknown paths to the home page */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </Router>{' '}
+        <RouterContext.Provider value={{ route, navigate }}>
+          <Main>
+            <MainPage />
+          </Main>
+        </RouterContext.Provider>
       </ThemeProvider>
     </DetailProvider>
   );

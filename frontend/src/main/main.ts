@@ -1,13 +1,3 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
-
-/**
- * This module executes inside of electron's main process. You can start
- * electron renderer process from here and communicate with the other processes
- * through IPC.
- *
- * When running `npm run build` or `npm run build:main`, this file is compiled to
- * `./src/main.js` using webpack. This gives us some performance wins.
- */
 import path from 'path';
 import {
   app,
@@ -35,159 +25,173 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let cornerWindow: BrowserWindow | null = null;
 
-// ipcMain.on('ipc-example', async (event, arg) => {
-//   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-//   console.log(msgTemplate(arg));
-//   event.reply('ipc-example', msgTemplate('pong'));
-// });
+const gotTheLock = app.requestSingleInstanceLock();
 
-if (process.env.NODE_ENV === 'production') {
-  const sourceMapSupport = require('source-map-support');
-  sourceMapSupport.install();
-}
-
-const isDebug =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
-
-if (isDebug) {
-  require('electron-debug')();
-}
-
-const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = ['REACT_DEVELOPER_TOOLS'];
-
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload,
-    )
-    .catch(console.log);
-};
-
-const RESOURCES_PATH = app.isPackaged
-  ? path.join(process.resourcesPath, 'assets')
-  : path.join(__dirname, '../../assets');
-
-const getAssetPath = (...paths: string[]): string => {
-  return path.join(RESOURCES_PATH, ...paths);
-};
-
-const createWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-
-  mainWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728,
-    icon: getAssetPath('icon.png'),
-    titleBarStyle: 'hidden',
-    webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
-  });
-  mainWindow.setMenuBarVisibility(false);
-
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
-
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Cleanup any existing windows before creating new ones
+    if (cornerWindow) {
+      cornerWindow.destroy();
+      cornerWindow = null;
     }
-
-    if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
-    } else {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
+      mainWindow.focus();
+    } else {
+      createWindow();
     }
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  const isDebug =
+    process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
-
-  // Open urls in the user's browser
-  mainWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
-    return { action: 'deny' };
-  });
-
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  new AppUpdater();
-
-  if (process.platform !== 'darwin') {
-    // Listen for theme change events from the renderer process
-    ipcMain.on('theme-change', (event, palette) => {
-      mainWindow?.setTitleBarOverlay({
-        color: palette.background.default,
-        symbolColor: palette.primary.dark,
-        height: 32,
-      });
-    });
+  if (isDebug) {
+    require('electron-debug')();
   }
-};
 
-/**
- * Add event listeners...
- */
+  const installExtensions = async () => {
+    const installer = require('electron-devtools-installer');
+    const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
+    const extensions = ['REACT_DEVELOPER_TOOLS'];
 
-app.on('ready', () => {
-  createWindow();
+    return installer
+      .default(
+        extensions.map((name) => installer[name]),
+        forceDownload,
+      )
+      .catch(console.log);
+  };
 
-  // Create the tray icon
-  const trayIconPath = getAssetPath('tray-icon.png'); // Replace with your tray icon path
-  tray = new Tray(trayIconPath);
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
 
-  // Create a context menu for the tray
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: '關於我的追番日記',
-      click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-        }
+  const getAssetPath = (...paths: string[]): string => {
+    return path.join(RESOURCES_PATH, ...paths);
+  };
+  const quitApp = () => {
+    // Destroy all windows
+    if (cornerWindow) {
+      cornerWindow.destroy();
+      cornerWindow = null;
+    }
+
+    if (mainWindow) {
+      mainWindow.destroy();
+      mainWindow = null;
+    }
+
+    // Remove tray
+    if (tray) {
+      tray.destroy();
+      tray = null;
+    }
+
+    app.quit();
+  };
+
+  const createWindow = async () => {
+    if (isDebug) {
+      await installExtensions();
+    }
+
+    mainWindow = new BrowserWindow({
+      show: false,
+      width: 1024,
+      height: 728,
+      icon: getAssetPath('icon.png'),
+      titleBarStyle: 'hidden',
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
       },
-    },
-    {
-      label: '結束',
-      click: () => {
-        app.quit();
+      ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {}),
+    });
+    mainWindow.setTitle('關於我的追番日記');
+    mainWindow.setMenuBarVisibility(false);
+
+    mainWindow.loadURL(resolveHtmlPath('index.html'));
+
+    mainWindow.on('ready-to-show', () => {
+      if (!mainWindow) {
+        throw new Error('"mainWindow" is not defined');
+      }
+
+      if (process.env.START_MINIMIZED) {
+        mainWindow.minimize();
+      } else {
+        mainWindow.show();
+      }
+    });
+
+    mainWindow.on('closed', () => {
+      mainWindow = null;
+    });
+
+    const menuBuilder = new MenuBuilder(mainWindow);
+    menuBuilder.buildMenu();
+
+    mainWindow.webContents.setWindowOpenHandler((edata) => {
+      shell.openExternal(edata.url);
+      return { action: 'deny' };
+    });
+
+    new AppUpdater();
+
+    if (process.platform !== 'darwin') {
+      ipcMain.on('theme-change', (event, palette) => {
+        mainWindow?.setTitleBarOverlay({
+          color: palette.background.default,
+          symbolColor: palette.primary.dark,
+          height: 32,
+        });
+      });
+    }
+  };
+
+  const createTray = () => {
+    const trayIconPath = getAssetPath('tray-icon.png');
+    tray = new Tray(trayIconPath);
+    // Create a context menu for the tray
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: '關於我的追番日記',
+        click: () => {
+          if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+          } else {
+            createWindow();
+          }
+        },
       },
-    },
-  ]);
-
-  // Set the context menu for the tray
-  tray.setContextMenu(contextMenu);
-
-  // Set a tooltip for the tray icon
-  tray.setToolTip('關於我的追番日記');
-
-  // Handle click events on the tray icon
-  tray.on('click', () => {
-    if (!cornerWindow) {
+      {
+        label: '結束',
+        click: () => {
+          quitApp();
+        },
+      },
+    ]);
+    // Move corner window creation outside click handler
+    const createCornerWindow = () => {
       const { width: screenWidth, height: screenHeight } =
         screen.getPrimaryDisplay().workAreaSize;
 
       cornerWindow = new BrowserWindow({
-        width: 400, // Adjust width
-        height: 600, // Adjust height
-        x: screenWidth - 420, // Position near bottom-right corner
+        width: 400,
+        height: 600,
+        x: screenWidth - 420,
         y: screenHeight - 600,
-        frame: false, // Frameless window
-        alwaysOnTop: true, // Keep the window on top
-        resizable: false, // Disable resizing
-        skipTaskbar: true, // Hide from taskbar
-        show: false, // Create the window hidden
+        frame: false,
+        alwaysOnTop: true,
+        resizable: false,
+        skipTaskbar: true,
+        show: false,
         transparent: true,
         webPreferences: {
           preload: app.isPackaged
@@ -198,47 +202,76 @@ app.on('ready', () => {
         },
       });
 
-      cornerWindow.loadURL(resolveHtmlPath('corner.html')); // Load your custom HTML
-      // Open urls in the user's browser
+      cornerWindow.loadURL(resolveHtmlPath('corner.html'));
+
       cornerWindow.webContents.setWindowOpenHandler((edata) => {
         shell.openExternal(edata.url);
         return { action: 'deny' };
       });
+
       cornerWindow.webContents.on('will-navigate', (event, url) => {
         event.preventDefault();
         shell.openExternal(url);
       });
+
       cornerWindow.on('closed', () => {
         cornerWindow = null;
       });
-    }
 
-    // Toggle visibility
-    if (cornerWindow) {
-      if (cornerWindow.isVisible()) {
-        cornerWindow.hide();
-      } else {
-        cornerWindow.show();
+      // Add ready-to-show event
+      cornerWindow.on('ready-to-show', () => {
+        cornerWindow?.show();
+      });
+    };
+
+    tray.setContextMenu(contextMenu);
+    tray.setToolTip('關於我的追番日記');
+
+    // Modify click handler
+    tray.on('click', async () => {
+      try {
+        if (!cornerWindow) {
+          createCornerWindow();
+        } else {
+          if (cornerWindow.isVisible()) {
+            cornerWindow.hide();
+          } else {
+            cornerWindow.show();
+            cornerWindow.focus();
+          }
+        }
+      } catch (error) {
+        log.error('Tray click error:', error);
       }
-    }
-  });
-});
+    });
+  };
 
-app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
-  if (process.platform !== 'darwin') {
-    //app.quit();
-  }
-});
+  app.whenReady().then(() => {
+    createWindow();
+    createTray();
 
-app
-  .whenReady()
-  .then(() => {
     app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow();
     });
-  })
-  .catch(console.log);
+  });
+
+  // Modify the window-all-closed event handler
+  app.on('window-all-closed', () => {
+    // Don't quit if on macOS (keep app running without windows)
+    if (process.platform !== 'darwin') {
+      // You can choose to keep the app running with tray or quit
+      // If you want to keep it running with tray, leave this empty
+      // If you want to quit, uncomment the following:
+      // app.quit();
+    }
+  });
+  app.on('before-quit', () => {
+    if (tray) {
+      tray.destroy();
+    }
+  });
+
+  process.on('uncaughtException', (error) => {
+    log.error('Uncaught exception:', error);
+  });
+}

@@ -3,7 +3,6 @@ import { Card, CardMedia, Typography, Stack, Box, Chip } from '@mui/material';
 import { weekdayColors, type Anime } from '../types/anime';
 import FavoriteButton from './FavoriteButton';
 import { dateFormater } from '../services/helper';
-import { useNavigate } from 'react-router-dom';
 import AnimeDetailContext from '../contexts/AnimeDetailContext';
 
 const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Box, Container, useTheme } from '@mui/material';
 import BottomNavBar from './BottomNavBar';
 import DefaultBG from '../../../assets/background/background-1.jpg';
@@ -6,6 +6,8 @@ import AnimeDetailDrawer from './AnimeDetailDrawer';
 import { animesCrawler } from '../services/animeHelper';
 import { addAnimes, crawlAnimes, deleteAnime, fetchUrl } from '../services/api';
 import * as cheerio from 'cheerio';
+import { Route } from 'react-router-dom';
+import RouterContext from '../contexts/RouterContext';
 
 type MainProps = {
   children: React.ReactNode;
@@ -14,6 +16,7 @@ type MainProps = {
 const Main: React.FC<MainProps> = ({ children }) => {
   const theme = useTheme();
   const { mode } = theme.palette;
+  const { route } = useContext(RouterContext);
 
   const [bgUrl, setBgUrl] = useState<string>(() => {
     return localStorage.getItem('anime_bg') || DefaultBG;
@@ -27,7 +30,12 @@ const Main: React.FC<MainProps> = ({ children }) => {
   const [bgTransform, setBgTransform] = useState<string>('translate(0px, 0px)');
   const animationRef = useRef<number>();
   const currentRef = useRef<[number, number]>([0, 0]);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // 每次切換頁面時回到頂部
+  useEffect(() => {
+    containerRef.current && containerRef.current?.scrollTo(0, 0);
+  }, [route]);
   // 初始化 currentRef 為滑鼠初始位置
   useEffect(() => {
     const { innerWidth, innerHeight } = window;
@@ -199,6 +207,7 @@ const Main: React.FC<MainProps> = ({ children }) => {
             flex={1}
             display="flex"
             mb={8}
+            ref={containerRef}
             sx={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
           >
             <Container

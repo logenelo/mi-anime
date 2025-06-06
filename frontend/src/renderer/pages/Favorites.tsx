@@ -60,8 +60,8 @@ const Favorites: React.FC = () => {
   }, [favoriteAnime, seasons]);
 
   React.useEffect(() => {
-    if (favoriteIds.length === 0) return;
     if (!isReady) return;
+    if (favoriteIds.length === 0) return setLoading(false);
 
     const startSort = async () => {
       const result = await getAnimeByIds(favoriteIds)

@@ -1,18 +1,5 @@
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  Card,
-  Chip,
-  Stack,
-  IconButton,
-  Icon,
-  Grid,
-  Alert,
-} from '@mui/material';
-import KeyboardArrowLeftRoundedIcon from '@mui/icons-material/KeyboardArrowLeftRounded';
-
+import { Box, Typography, Card, Chip, Stack, Grid, Alert } from '@mui/material';
 import { getAnimeById } from '../../services/api';
 import { Anime, SEASONS, weekdayColors } from '../../types/anime';
 import useFavoriteList from '../../hooks/useFavouriteList';
@@ -21,7 +8,6 @@ import { getEpisodeCount, WEEKDAY_NAMES } from '../../services/animeHelper';
 import Loading from '../../components/Loading';
 
 const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
-  const navigate = useNavigate();
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [anime, setAnime] = React.useState<Anime>();

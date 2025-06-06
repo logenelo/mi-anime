@@ -72,7 +72,6 @@ export const animesCrawler = async (year: number, season: Season) => {
       .filter((p) => p.value); // Filter out empty platform names
 
     // Default episode count (most seasonal anime are 12-13 episodes)
-    //let episode = dateToday === '跨季續播' ? 24 : 12;
     const link = card.find('a.bgmtv').first().attr('href') || '';
 
     const episode = dateToday === '跨季續播' ? 24 : 12;
@@ -110,10 +109,8 @@ export const animesCrawler = async (year: number, season: Season) => {
             const result = $('ul.prg_list li').last().text();
 
             const episode = parseInt(result);
-            console.log('*', anime.title, episode);
             return episode ? episode : anime.episode;
           } else {
-            console.log(anime.title, episode);
             return episode;
           }
         });
