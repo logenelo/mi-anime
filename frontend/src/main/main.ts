@@ -140,7 +140,7 @@ if (!gotTheLock) {
     });
 
     mainWindow.on('closed', () => {
-      mainWindow = null;
+      mainWindow.hide();
     });
 
     const menuBuilder = new MenuBuilder(mainWindow);
