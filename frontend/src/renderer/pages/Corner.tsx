@@ -19,7 +19,6 @@ import { getAnimeByIds } from '../services/api';
 import { getEpisodeCount } from '../services/animeHelper';
 import React, { memo, useMemo } from 'react';
 import useFavoriteList from '../hooks/useFavouriteList';
-import '../App.css';
 
 const Corner = () => {
   const { isReady, getEpisodeWatched } = useFavoriteList();

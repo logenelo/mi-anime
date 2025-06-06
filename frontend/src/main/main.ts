@@ -12,10 +12,20 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+console.log('日志文件路径:', log.transports.file.getFile().path);
+log.transports.file.level = 'debug';
+
+if (app.isPackaged) {
+  const ex = process.execPath;
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    path: ex,
+    args: ['--openAsHidden'],
+  });
+}
 
 class AppUpdater {
   constructor() {
-    log.transports.file.level = 'info';
     autoUpdater.logger = log;
     autoUpdater.checkForUpdatesAndNotify();
   }
@@ -31,11 +41,8 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Cleanup any existing windows before creating new ones
-    if (cornerWindow) {
-      cornerWindow.destroy();
-      cornerWindow = null;
-    }
+    log.info('Second instance attempted, activating main window');
+
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
@@ -94,6 +101,7 @@ if (!gotTheLock) {
   };
 
   const createWindow = async () => {
+    log.info('Creating main window');
     if (isDebug) {
       await installExtensions();
     }
@@ -117,14 +125,17 @@ if (!gotTheLock) {
     mainWindow.loadURL(resolveHtmlPath('index.html'));
 
     mainWindow.on('ready-to-show', () => {
+      log.info('MainWindow ready to show');
       if (!mainWindow) {
         throw new Error('"mainWindow" is not defined');
       }
-
-      if (process.env.START_MINIMIZED) {
-        mainWindow.minimize();
-      } else {
-        mainWindow.show();
+      if (process.argv.indexOf('--openAsHidden') < 0) {
+        if (process.env.START_MINIMIZED) {
+          mainWindow.minimize();
+        } else {
+          mainWindow.restore();
+          mainWindow.show();
+        }
       }
     });
 
@@ -152,6 +163,56 @@ if (!gotTheLock) {
       });
     }
   };
+  const createCornerWindow = () => {
+    log.info('Creating corner window');
+
+    const { width: screenWidth, height: screenHeight } =
+      screen.getPrimaryDisplay().workAreaSize;
+
+    cornerWindow = new BrowserWindow({
+      width: 400,
+      height: 600,
+      x: screenWidth - 420,
+      y: screenHeight - 600,
+      frame: false,
+      alwaysOnTop: true,
+      resizable: false,
+      skipTaskbar: true,
+      show: false,
+      transparent: true,
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+
+    cornerWindow.loadURL(resolveHtmlPath('corner.html'));
+
+    cornerWindow.webContents.setWindowOpenHandler((edata) => {
+      shell.openExternal(edata.url);
+      return { action: 'deny' };
+    });
+
+    cornerWindow.webContents.on('will-navigate', (event, url) => {
+      event.preventDefault();
+      shell.openExternal(url);
+    });
+
+    cornerWindow.on('closed', () => {
+      cornerWindow = null;
+    });
+
+    // Add ready-to-show event
+    cornerWindow.on('ready-to-show', () => {
+      if (!cornerWindow) {
+        return log.error('Corner window is not defined');
+      }
+      cornerWindow.show();
+    });
+  };
 
   const createTray = () => {
     const trayIconPath = getAssetPath('tray-icon.png');
@@ -178,51 +239,6 @@ if (!gotTheLock) {
       },
     ]);
     // Move corner window creation outside click handler
-    const createCornerWindow = () => {
-      const { width: screenWidth, height: screenHeight } =
-        screen.getPrimaryDisplay().workAreaSize;
-
-      cornerWindow = new BrowserWindow({
-        width: 400,
-        height: 600,
-        x: screenWidth - 420,
-        y: screenHeight - 600,
-        frame: false,
-        alwaysOnTop: true,
-        resizable: false,
-        skipTaskbar: true,
-        show: false,
-        transparent: true,
-        webPreferences: {
-          preload: app.isPackaged
-            ? path.join(__dirname, 'preload.js')
-            : path.join(__dirname, '../../.erb/dll/preload.js'),
-          contextIsolation: true,
-          nodeIntegration: false,
-        },
-      });
-
-      cornerWindow.loadURL(resolveHtmlPath('corner.html'));
-
-      cornerWindow.webContents.setWindowOpenHandler((edata) => {
-        shell.openExternal(edata.url);
-        return { action: 'deny' };
-      });
-
-      cornerWindow.webContents.on('will-navigate', (event, url) => {
-        event.preventDefault();
-        shell.openExternal(url);
-      });
-
-      cornerWindow.on('closed', () => {
-        cornerWindow = null;
-      });
-
-      // Add ready-to-show event
-      cornerWindow.on('ready-to-show', () => {
-        cornerWindow?.show();
-      });
-    };
 
     tray.setContextMenu(contextMenu);
     tray.setToolTip('關於我的追番日記');
@@ -230,9 +246,11 @@ if (!gotTheLock) {
     // Modify click handler
     tray.on('click', async () => {
       try {
+        log.debug('Tray clicked');
         if (!cornerWindow) {
           createCornerWindow();
         } else {
+          log.debug('Corner window visible', cornerWindow.isVisible());
           if (cornerWindow.isVisible()) {
             cornerWindow.hide();
           } else {
@@ -249,6 +267,9 @@ if (!gotTheLock) {
   app.whenReady().then(() => {
     createWindow();
     createTray();
+    if (process.argv.indexOf('--openAsHidden') >= 0) {
+      createCornerWindow();
+    }
 
     app.on('activate', () => {
       if (mainWindow === null) createWindow();

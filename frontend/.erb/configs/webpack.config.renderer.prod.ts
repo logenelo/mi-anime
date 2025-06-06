@@ -25,7 +25,10 @@ const configuration: webpack.Configuration = {
 
   target: ['web', 'electron-renderer'],
 
-  entry: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+  entry: [
+    path.join(webpackPaths.srcRendererPath, 'index.tsx'),
+    path.join(webpackPaths.srcRendererPath, 'corner.tsx'),
+  ],
 
   output: {
     path: webpackPaths.distRendererPath,
@@ -123,6 +126,17 @@ const configuration: webpack.Configuration = {
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
+      minify: {
+        collapseWhitespace: true,
+        removeAttributeQuotes: true,
+        removeComments: true,
+      },
+      isBrowser: false,
+      isDevelopment: false,
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'corner.html',
+      template: path.join(webpackPaths.srcRendererPath, 'corner.ejs'),
       minify: {
         collapseWhitespace: true,
         removeAttributeQuotes: true,

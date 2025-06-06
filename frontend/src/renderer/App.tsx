@@ -1,15 +1,7 @@
 import React from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  Outlet,
-} from 'react-router-dom';
 import { Home, Calendar, Favorites, Settings, Animes } from './pages';
 import Main from './components/Main';
 
-import './App.css';
 import { initDB } from 'react-indexed-db-hook';
 import { DBConfig } from './DBConfig';
 import { DetailProvider } from './contexts/AnimeDetailContext';
