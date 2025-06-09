@@ -12,6 +12,10 @@ interface AnimeData {
 	episode: number;
 }
 
+interface AnimeMetadata {
+	year: number;
+	season: number;
+}
 export const animesCrawler = async (year: number, season: number) => {
 	const seasonMap: Record<number, string> = {
 		1: '01', // Winter
@@ -41,19 +45,14 @@ export const animesCrawler = async (year: number, season: number) => {
 };
 
 export async function listAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-	const list = await env.ANIME.list();
-	const animes: AnimeData[] = [];
-	console.log(list.keys.length);
-	await Promise.all(
+	const list = await env.ANIME.list({prefix: 'anime-'});
+	
+	const animes: AnimeData[] = await Promise.all(
 		list.keys.map(async (key) => {
-			if (key.name !== 'lastUpdateTime') {
-				const string = await env.ANIME.get(key.name);
-				if (string) {
-					animes.push(JSON.parse(string));
-				}
-			}
+			const string = await env.ANIME.get(key.name);
+			return string && JSON.parse(string)
 		})
-	);
+	).then((animes) => animes.filter((anime)=>anime));
 
 	const lastUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
 	const response = {
@@ -71,6 +70,7 @@ export async function listAnimes(request: Request, env: Env, ctx: ExecutionConte
 export async function getAnimeById(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const { id } = request.params;
 	const anime = await env.ANIME.get(id);
+	const lastUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
 
 	if (!anime) {
 		return new Response('Anime not found', {
@@ -80,6 +80,7 @@ export async function getAnimeById(request: Request, env: Env, ctx: ExecutionCon
 
 	const response = {
 		statusCode: 200,
+		lastUpdateTime,
 		anime: JSON.parse(anime),
 	};
 	return new Response(JSON.stringify(response), {
@@ -114,9 +115,11 @@ export async function listAnimesByIds(request: Request, env: Env, ctx: Execution
 		.filter((anime): anime is string => anime !== null)
 		.map((anime) => JSON.parse(anime))
 		.reverse();
+	const lastUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
 
 	const response = {
 		statusCode: 200,
+		lastUpdateTime,
 		animes: animes,
 	};
 	return new Response(JSON.stringify(response), {
@@ -128,23 +131,24 @@ export async function listAnimesByIds(request: Request, env: Env, ctx: Execution
 
 export async function getAnimesByYearAndSeason(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const { year, season } = request.params;
-	console.log(year, season);
 	if (!year || !season || !Number(year) || !Number(season)) {
 		return new Response('Invalid body format', {
 			status: 400,
 		});
 	}
 
-	const list = await env.ANIME.list();
-	const animeStrings = await Promise.all(list.keys.map((key) => env.ANIME.get(key.name)));
+	const list = await env.ANIME.list<AnimeMetadata>({prefix: 'anime-'});
+	const filteredList  = list.keys.filter((key) => key.metadata && key.metadata.year == Number(year) && key.metadata.season == Number(season));
+	const animeStrings = await Promise.all(filteredList.map((key) => env.ANIME.get(key.name)));
 
 	const animes: AnimeData[] = animeStrings.filter((anime): anime is string => anime !== null).map((anime) => JSON.parse(anime));
 
-	const filteredAnimes = animes.filter((anime: AnimeData) => anime.year == Number(year) && anime.season == Number(season));
+	const lastUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
 
 	const response = {
 		statusCode: 200,
-		animes: filteredAnimes,
+		lastUpdateTime,
+		animes: animes,
 	};
 	return new Response(JSON.stringify(response), {
 		headers: {
@@ -192,7 +196,7 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 						...anime,
 						updatedAt: new Date().getTime(),
 					};
-					await env.ANIME.put(anime.id, JSON.stringify(updatedAnime));
+					await env.ANIME.put('anime-'+anime.id, JSON.stringify(updatedAnime),{metadata: {year: updatedAnime.year, season: updatedAnime.season}});	
 					return {
 						...updatedAnime,
 						updated: true,
@@ -207,7 +211,7 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 				createdAt: new Date().getTime(),
 				updatedAt: new Date().getTime(),
 			};
-			await env.ANIME.put(newAnime.id, JSON.stringify(newAnime));
+			await env.ANIME.put('anime-'+newAnime.id, JSON.stringify(newAnime),{metadata: {year: newAnime.year, season: newAnime.season}});
 			return {
 				...newAnime,
 				created: true,
@@ -222,26 +226,6 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 
 	return new Response(JSON.stringify(response), {
 		status: 201,
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	});
-}
-
-export async function updateAnime(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-	const id = new URL(request.url).pathname.split('/')[2];
-	const existing = await env.ANIME.get(id);
-
-	if (!existing) {
-		return new Response('Anime not found', {
-			status: 404,
-		});
-	}
-
-	const updatedAnime: AnimeData = await request.json();
-	await env.ANIME.put(id, JSON.stringify(updatedAnime));
-
-	return new Response(JSON.stringify(updatedAnime), {
 		headers: {
 			'Content-Type': 'application/json',
 		},
