@@ -120,7 +120,7 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
                 ...anime.platform,
                 {
                   value: '其他',
-                  href: 'https://anime1.cc/search?q=' + anime.title,
+                  href: 'https://anime1.me/?s=' + anime.title,
                   region: 'HK',
                 },
               ]

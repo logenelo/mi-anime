@@ -43,7 +43,7 @@ const Corner = () => {
       .concat([
         {
           value: '其他',
-          href: 'https://anime1.cc/search?q=' + anime.title,
+          href: 'https://anime1.me/?s=' + anime.title,
           region: 'HK',
         },
       ]);
@@ -56,10 +56,14 @@ const Corner = () => {
         >
           <Box>
             <Typography
-              component="a"
-              href={platforms?.[0]?.href}
               variant="h6"
               key={anime.id}
+              onClick={() => {
+                window.electron.ipcRenderer.sendMessage(
+                  'ipc-example',
+                  anime.id,
+                );
+              }}
               sx={{
                 textDecoration: 'none',
                 color: 'inherit',

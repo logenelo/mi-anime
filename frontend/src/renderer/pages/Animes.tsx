@@ -281,7 +281,7 @@ const Animes: React.FC = () => {
           ) : showAll && displayAnimes.length === 0 ? (
             <Typography color="textPrimary">找不到符合條件的動畫</Typography>
           ) : showAll && page * PAGE_SIZE >= displayAnimes.length ? (
-            '沒有更多了'
+            <Typography color="textPrimary">沒有更多了</Typography>
           ) : (
             <Loading />
           )}

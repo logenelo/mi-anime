@@ -4,7 +4,9 @@ import Main from './components/Main';
 
 import { initDB } from 'react-indexed-db-hook';
 import { DBConfig } from './DBConfig';
-import { DetailProvider } from './contexts/AnimeDetailContext';
+import AnimeDetailContext, {
+  DetailProvider,
+} from './contexts/AnimeDetailContext';
 import { ThemeProvider } from '@mui/material/styles';
 import useCustomSetting from './hooks/useCustomSetting';
 import { ThemeMode } from './types/setting';
@@ -55,6 +57,8 @@ export const useDarkMode = (): [
 const App: React.FC = () => {
   const [themeMode, themeColor, themeToggler, colorToggler] = useDarkMode();
   const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
+
+  const detail = React.useContext(AnimeDetailContext);
   const [route, setRoute] = React.useState<string>('/');
   const routes: Record<string, JSX.Element> = {
     '/': <Home />,
@@ -74,6 +78,13 @@ const App: React.FC = () => {
       setRoute('/');
     }
   }, [route]);
+
+  React.useEffect(() => {
+    window.electron.ipcRenderer.once('ipc-example', (arg) => {
+      console.log(arg);
+      detail.handleOpen(arg as string);
+    });
+  });
   return (
     <DetailProvider>
       <ThemeProvider theme={theme}>

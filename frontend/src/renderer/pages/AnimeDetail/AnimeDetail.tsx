@@ -126,7 +126,7 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
               ...anime.platform,
               {
                 value: '其他',
-                href: 'https://anime1.cc/search?q=' + anime.title,
+                href: 'https://anime1.me/?s=' + anime.title,
                 region: 'HK',
               },
             ]
@@ -159,6 +159,7 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
                   <Chip
                     sx={{ borderRadius: 2, minWidth: 39 }}
                     label={episode}
+                    color={episode <= watched ? 'primary' : 'default'}
                     variant={episode <= watched ? 'filled' : 'outlined'}
                     onClick={() => handleEpisodeClick(episode)}
                     key={episode}

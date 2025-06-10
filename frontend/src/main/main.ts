@@ -37,6 +37,11 @@ let cornerWindow: BrowserWindow | null = null;
 
 const gotTheLock = app.requestSingleInstanceLock();
 
+
+ipcMain.on('ipc-example', async (event, arg) => {
+  event.reply('ipc-example', arg);
+});
+
 if (!gotTheLock) {
   app.quit();
 } else {
@@ -140,7 +145,7 @@ if (!gotTheLock) {
     });
 
     mainWindow.on('closed', () => {
-      mainWindow.hide();
+      mainWindow?.hide();
     });
 
     const menuBuilder = new MenuBuilder(mainWindow);

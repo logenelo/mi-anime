@@ -289,7 +289,7 @@ const Settings: React.FC = () => {
 
           {/* Current Background Preview */}
           <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
               目前背景
             </Typography>
             <CardMedia
@@ -307,10 +307,13 @@ const Settings: React.FC = () => {
 
           {/* Background List */}
           <Box sx={{ mb: 2 }}>
-            <Stack spacing="2px" direction="row" alignItems="center">
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                自訂背景列表
-              </Typography>
+            <Stack
+              spacing="2px"
+              direction="row"
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <Typography variant="subtitle1">自訂背景列表</Typography>
               <IconButton
                 size="small"
                 color="primary"
