@@ -25,7 +25,7 @@ import useDebounce from '../hooks/useDebounce';
 import { animesCrawler, getSeasonCode } from '../services/animeHelper';
 import { DateTime } from 'luxon';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 60;
 
 const CURRENT_YEAR = new Date().getFullYear();
 const START_YEAR = 2020;
@@ -39,9 +39,11 @@ const Animes: React.FC = () => {
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [year, setYear] = useState<number>(0);
   const [season, setSeason] = useState<Season | 0>(0);
+  const [cursor, setCursor] = useState<string>('');
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
 
   const [searchText, setSearchText] = useState<string>('');
-  const debouncedSearchText = useDebounce(searchText, 300);
+  const debouncedSearchText = useDebounce(searchText, 500);
 
   const [loadingRef, isVisible] = useElementOnScreen({
     threshold: 0.1,
@@ -49,33 +51,32 @@ const Animes: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
   const [page, setPage] = useState(1);
 
-  const addNewAnimes = useCallback(
-    async (year: number, season: Season) => {
-      try {
-        setLoading(true);
-        const resp = await getAnimesByYearAndSeason(year, season);
-        if (resp.statusCode === 200) {
-          const sortedAnimes = animes
-            .concat(resp.animes)
-            .sort((a: Anime, b: Anime) => b.startDate - a.startDate);
-          setAnimes(sortedAnimes);
-        }
-      } catch (error) {
-        console.error('Error fetching animes:', error);
-      } finally {
-        setLoading(false);
+  const addNewAnimes = useCallback(async (year: number, season: Season) => {
+    try {
+      const resp = await getAnimesByYearAndSeason(year, season);
+      if (resp.statusCode === 200) {
+        setAnimes((animes) =>
+          animes.concat(resp.animes).sort((a: Anime, b: Anime) => {
+            if (b.year !== a.year) {
+              return b.year - a.year; // Descending order for year
+            }
+            return b.season - a.season; // Descending order for season
+          }),
+        );
       }
-    },
-    [animes],
-  );
+    } catch (error) {
+      console.error('Error fetching animes:', error);
+    }
+  }, []);
 
   // Filter
   const displayAnimes = useMemo(() => {
-    //reset page
+    if (!showAll) return [];
     setPage(1);
-    setShowAll(false);
-
-    if (!year && !season && !debouncedSearchText) return animes;
+    if (!year && !season && !debouncedSearchText) {
+      setLoading(false);
+      return animes;
+    }
     setLoading(true);
 
     const filteredAnimes = animes.filter((anime) => {
@@ -90,57 +91,94 @@ const Animes: React.FC = () => {
     });
 
     if (filteredAnimes.length === 0 && year && season) {
-      addNewAnimes(year, season);
+      addNewAnimes(year, season).then(() => {
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+    return filteredAnimes;
+  }, [year, season, debouncedSearchText, showAll, animes]);
+
+  const fetchAnimes = async (cursor: string) => {
+    const params = {
+      cursor,
+      limit: 900,
+    };
+
+    const resp = await getAllAnimes(params);
+    if (resp.statusCode !== 200) {
+      return console.error('Error fetching animes:', resp);
+    }
+    setAnimes((prev) => {
+      const newAnimes = prev.concat(resp.animes);
+      if (resp.finish) {
+        return newAnimes.sort((a: Anime, b: Anime) => {
+          if (b.year !== a.year) {
+            return b.year - a.year; // Descending order for year
+          }
+          return b.season - a.season; // Descending order for season
+        });
+      } else {
+        return newAnimes;
+      }
+    });
+    setLastUpdateTime(resp.lastUpdateTime);
+
+    setCursor(resp.cursor);
+    if (resp.finish) {
+      setShowAll(true);
     }
     setLoading(false);
-    return filteredAnimes;
-  }, [year, season, debouncedSearchText, animes]);
 
-  // Fetch animes
+    return resp;
+  };
+
+  //Fetch
   useEffect(() => {
-    const fetchAnimes = async () => {
-      try {
-        const resp = await getAllAnimes();
-        if (resp.statusCode === 200) {
-          const sortedAnimes = resp.animes.sort(
-            (a: Anime, b: Anime) => b.startDate - a.startDate,
-          );
-          setAnimes(sortedAnimes);
+    const getAnimes = async (cursor: string) => {
+      let temp = cursor;
+      while (1) {
+        const resp = await fetchAnimes(temp);
+        if (resp.finish) {
           setLoading(false);
+          if (!lastUpdateTime) {
+            const lastUpdateTime = resp.lastUpdateTime;
+            const now = DateTime.now();
+            if (now.toMillis() - lastUpdateTime > 24 * 60 * 60 * 1000) {
+              const nowSeason = getSeasonCode(now.toJSDate());
+              const nextMonth = now.plus({ month: 1 });
+              const nextSeason = getSeasonCode(nextMonth.toJSDate());
+              animesCrawler(nowSeason[0], nowSeason[1]).then((animes) => {
+                if (animes && animes.length > 0) {
+                  addAnimes(animes);
+                }
+              });
 
-          const lastUpdateTime = resp.lastUpdateTime;
-          const now = DateTime.now();
-          if (now.toMillis() - lastUpdateTime > 24 * 60 * 60 * 1000) {
-            const nowSeason = getSeasonCode(now.toJSDate());
-            const nextMonth = now.plus({ month: 1 });
-            const nextSeason = getSeasonCode(nextMonth.toJSDate());
-            const animes = await animesCrawler(nowSeason[0], nowSeason[1]);
-            if (animes && animes.length > 0) {
-              addAnimes(animes);
-            }
-
-            if (
-              nowSeason[0] !== nextSeason[0] ||
-              nowSeason[1] !== nextSeason[1]
-            ) {
-              const nextAnimes = await animesCrawler(
-                nextSeason[0],
-                nextSeason[1],
-              ); //Next Season
-              if (nextAnimes && nextAnimes.length > 0) {
-                addAnimes(nextAnimes);
+              if (
+                nowSeason[0] !== nextSeason[0] ||
+                nowSeason[1] !== nextSeason[1]
+              ) {
+                animesCrawler(nextSeason[0], nextSeason[1]).then(
+                  (nextAnimes) => {
+                    if (nextAnimes && nextAnimes.length > 0) {
+                      addAnimes(nextAnimes);
+                    }
+                  },
+                ); //Next Season
               }
             }
           }
+          return;
+        } else {
+          temp = resp.cursor;
         }
-      } catch (error) {
-        console.error('Error fetching animes:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchAnimes();
+    if (!showAll) {
+      getAnimes(cursor);
+    }
   }, []);
 
   // Debounce searchText
@@ -148,10 +186,6 @@ const Animes: React.FC = () => {
     if (animes.length === 0) return;
     setLoading(true);
   }, [searchText]);
-  useEffect(() => {
-    if (animes.length === 0) return;
-    setLoading(false);
-  }, [debouncedSearchText]);
 
   // Pagination
   const nextPage = () => {
@@ -159,16 +193,15 @@ const Animes: React.FC = () => {
       return prev + 1;
     });
   };
-  useEffect(() => {
-    if (page * PAGE_SIZE >= displayAnimes.length) {
-      setShowAll(true);
-    }
-  }, [page]);
+
   useEffect(() => {
     if (isVisible) {
       nextPage();
     }
   }, [isVisible]);
+  useEffect(() => {
+    console.log(animes);
+  }, [animes]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -245,9 +278,9 @@ const Animes: React.FC = () => {
         <Box ref={loadingRef} p={2} display="flex" justifyContent="center">
           {loading ? (
             <Loading />
-          ) : displayAnimes.length === 0 ? (
+          ) : showAll && displayAnimes.length === 0 ? (
             <Typography color="textPrimary">找不到符合條件的動畫</Typography>
-          ) : showAll ? (
+          ) : showAll && page * PAGE_SIZE >= displayAnimes.length ? (
             '沒有更多了'
           ) : (
             <Loading />

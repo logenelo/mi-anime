@@ -20,10 +20,10 @@ export const useDarkMode = (): [
   (color: string) => void,
   boolean,
 ] => {
-  const [themeMode, setTheme] = React.useState<ThemeMode>('light');
+  const [customSetting, setCustomSetting] = useCustomSetting();
+  const [themeMode, setTheme] = React.useState<ThemeMode>(customSetting.theme);
   const [themeColor, setThemeColor] = React.useState<string>('Bocchi');
   const [mountedComponent, setMountedComponent] = React.useState(false);
-  const [customSetting, setCustomSetting] = useCustomSetting();
 
   const themeToggler = (mode: ThemeMode): void => {
     setCustomSetting({ theme: mode });

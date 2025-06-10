@@ -45,7 +45,15 @@ export const animesCrawler = async (year: number, season: number) => {
 };
 
 export async function listAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-	const list = await env.ANIME.list({prefix: 'anime-'});
+	const url = request.url;
+  const params = new URL(url);
+
+	const cursor = params.searchParams.get('cursor') || undefined;
+	const limit = Number(params.searchParams.get('limit')) || 100;
+	console.log(cursor, limit)
+
+	const list = await env.ANIME.list<AnimeMetadata>({prefix: 'anime-', cursor, limit});
+	console.log(list);
 	
 	const animes: AnimeData[] = await Promise.all(
 		list.keys.map(async (key) => {
@@ -55,11 +63,14 @@ export async function listAnimes(request: Request, env: Env, ctx: ExecutionConte
 	).then((animes) => animes.filter((anime)=>anime));
 
 	const lastUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
-	const response = {
+	const response: any = {
 		statusCode: 200,
 		lastUpdateTime,
 		animes,
+		finish:list.list_complete,
+		cursor: (list as any)?.cursor
 	};
+	
 	return new Response(JSON.stringify(response), {
 		headers: {
 			'Content-Type': 'application/json',
@@ -69,7 +80,7 @@ export async function listAnimes(request: Request, env: Env, ctx: ExecutionConte
 
 export async function getAnimeById(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const { id } = request.params;
-	const anime = await env.ANIME.get(id);
+	const anime = await env.ANIME.get('anime-'+id);
 	const lastUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
 
 	if (!anime) {
@@ -109,7 +120,7 @@ export async function listAnimesByIds(request: Request, env: Env, ctx: Execution
 		);
 	}
 
-	const animeStrings = await Promise.all(ids.map((id) => env.ANIME.get(id)));
+	const animeStrings = await Promise.all(ids.map((id) => env.ANIME.get('anime-'+id)));
 
 	const animes: AnimeData[] = animeStrings
 		.filter((anime): anime is string => anime !== null)
@@ -188,7 +199,7 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 		newAnimes.map(async (anime) => {
 			// Check if anime already exists
 			if (anime.id) {
-				const existing = await env.ANIME.get(anime.id);
+				const existing = await env.ANIME.get('anime-'+anime.id);
 				if (existing) {
 					// Update existing record
 					const updatedAnime = {
@@ -196,7 +207,7 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 						...anime,
 						updatedAt: new Date().getTime(),
 					};
-					await env.ANIME.put('anime-'+anime.id, JSON.stringify(updatedAnime),{metadata: {year: updatedAnime.year, season: updatedAnime.season}});	
+					await env.ANIME.put('anime-'+anime.id, JSON.stringify(updatedAnime),{metadata: {year: updatedAnime.year, season: updatedAnime.season, title: updatedAnime.title}});	
 					return {
 						...updatedAnime,
 						updated: true,
@@ -253,7 +264,7 @@ export async function deleteAnime(request: Request, env: Env, ctx: ExecutionCont
 		});
 	}
 
-	const existing = await env.ANIME.get(id);
+	const existing = await env.ANIME.get('anime-'+id);
 
 	if (!existing) {
 		return new Response('Anime not found', {
@@ -261,20 +272,19 @@ export async function deleteAnime(request: Request, env: Env, ctx: ExecutionCont
 		});
 	}
 
-	await env.ANIME.delete(id);
+	await env.ANIME.delete('anime-'+id);
 	return new Response(null, {
 		status: 204,
 	});
 }
 
 export async function deleteAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-	const list = await env.ANIME.list();
+	const list = await env.ANIME.list({prefix: 'anime-', limit: 900});
 	const deleteAll = await Promise.all(list.keys.map((key) => env.ANIME.delete(key.name)));
+	const lastUpdateTime = await env.ANIME.put('lastUpdateTime', '0');
 
 	return new Response(
-		JSON.stringify({
-			message: 'Deleted ' + deleteAll.length + ' animes',
-		}),
+		null,
 		{
 			status: 204,
 		}

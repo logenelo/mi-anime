@@ -12,8 +12,11 @@ const useCustomSetting = (): [
   UserPreferences,
   (newValue: Partial<UserPreferences>) => void,
 ] => {
-  const [customSetting, setUserPreferences] =
-    useState<UserPreferences>(DefaultPreferences);
+  const [customSetting, setUserPreferences] = useState<UserPreferences>(
+    localStorage.getItem('user_preferences')
+      ? JSON.parse(localStorage.getItem('user_preferences') as string)
+      : DefaultPreferences,
+  );
   const setCustomSetting = (newValue: Partial<UserPreferences>) => {
     setUserPreferences((prev) => {
       const updated = { ...prev, ...newValue };
@@ -22,13 +25,6 @@ const useCustomSetting = (): [
       return updated;
     });
   };
-
-  useEffect(() => {
-    const data = localStorage.getItem('user_preferences');
-    if (data) {
-      setUserPreferences(JSON.parse(data));
-    }
-  }, []);
 
   return [customSetting, setCustomSetting];
 };

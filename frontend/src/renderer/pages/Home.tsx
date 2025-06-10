@@ -1,16 +1,18 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import AnimeList from '../components/AnimeList';
-import { getSeasonAnimes } from '../services/api';
+import { deleteAllAnimes, deleteAnime, getSeasonAnimes } from '../services/api';
 import { Anime } from '../types/anime';
 import Loading from '../components/Loading';
 import { getSeasonCode } from '../services/animeHelper';
 const Home: React.FC = () => {
   // 範例動畫資料
   const [animeList, setAnimeList] = React.useState<Anime[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
+    if (loading) return;
+    setLoading(true);
     getSeasonAnimes()
       .then((resp) => {
         if (resp.statusCode === 200) {

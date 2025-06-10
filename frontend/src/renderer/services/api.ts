@@ -1,4 +1,3 @@
-import { get } from 'http';
 import type { Anime, Season } from '../types/anime';
 import { animesCrawler, getSeasonCode } from './animeHelper';
 
@@ -62,8 +61,8 @@ const putMethod = (url: string, body?: any) => {
     });
 };
 
-export const getAllAnimes = () => {
-  return getMethod(`${url}`);
+export const getAllAnimes = (params:any) => {
+  return getMethod(`${url}`, params);
 };
 export const getAnimeById = (id: string) => {
   return getMethod(`${url}/get/${id}`);
@@ -123,3 +122,15 @@ export const deleteAnime = (id: string) => {
       console.error('Error fetching animes:', error);
     });
 };
+
+export const deleteAllAnimes = () => {
+  return fetch(`${url}`, {
+    method: 'DELETE',
+  })
+    .then((data) => {
+      return data;
+    })
+    .catch((error) => {
+      console.error('Error fetching animes:', error);
+    });
+}

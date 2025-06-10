@@ -7,6 +7,7 @@ import {
 	getAnimesByYearAndSeason,
 	crawlSeasonAnimes,
 	getAnimeById,
+	deleteAnimes,
 } from './handlers/anime';
 import { fetchUrl, test } from './handlers/handlers';
 
@@ -26,41 +27,60 @@ router
 	.post('/anime', createAnimes)
 	.post('/anime/crawl', crawlSeasonAnimes)
 	.post('/anime/ids', listAnimesByIds)
-	.delete('/anime/:id', deleteAnime);
+	.delete('/anime/:id', deleteAnime)
+	.delete('/anime', deleteAnimes);
 
-//.delete('/anime', deleteAnimes);
 
 
+const getResponseBody = (req: Request, resp: Response) =>{
+	if (req.url.includes('/anime/fetch')) {
+		return resp.text();
+	}else{
+		return resp.json<Record<string, any>>();
+	}
+	
+} 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		try {
+			if (request.method !=='GET') {
+				return await router.handle(request, env, ctx);
+			}
+			
+			// Cache the response
 			const cacheKey = new Request(request.url, request); // Create a cache key based on the request
 			const cache = caches.default; // Use the default cache
 
-			if (request.method === 'GET') {
-				// Check if the response is in the cache
-				let response = await cache.match(cacheKey);
-				const body: any = await response?.json();
+			// Check if the response is in the cache
+			let response = await cache.match(cacheKey);
+			if (response) {
+				const body:any = await getResponseBody(request, response);
+				const responseBody = typeof body === 'string' ? body : JSON.stringify(body);
+
 				console.log('Cache hit!');
-				const newUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
-				const lastUpdateTime = body?.lastUpdateTime
-				if (newUpdateTime<=lastUpdateTime) {
-					if (body) {
-						return new Response(JSON.stringify(body));
+				if (body?.lastUpdateTime) {
+					const newUpdateTime = Number(await env.ANIME.get('lastUpdateTime')) || 0;
+					const lastUpdateTime = body.lastUpdateTime;
+					console.log(`New: ${newUpdateTime} Last: ${lastUpdateTime}`) 
+					if (newUpdateTime<=lastUpdateTime) {
+						return new Response(responseBody,response);
 					}
+				} else {
+					return new Response(responseBody,response);
 				}
 			}
+			//not in cache
+			response = await router.handle(request, env, ctx);
+			const body = await getResponseBody(request, response);
+			const responseBody = typeof body === 'string' ? body : JSON.stringify(body);
 
-
-			let response = await router.handle(request, env, ctx);
-			if (request.method === 'GET') {
-				// Clone the response before caching (Response can only be used once)
-				const responseClone = new Response(response.body, response);
+			if (!request.url.includes('/anime/fetch') && response.ok ) {
+				const responseToCache = new Response(JSON.stringify(body), response);
 				// Cache the response for 1 day
-				responseClone.headers.append('Cache-Control', 'max-age=86400');
-				await cache.put(cacheKey, responseClone);
+				responseToCache.headers.append('Cache-Control', 'max-age=86400');
+				await cache.put(cacheKey, responseToCache);
 			}
-			return response
+			return new Response(responseBody, response);	
 		} catch (err: any) {
 			console.error(`Error: ${err}`);
 			return new Response(err.message, { status: 500 });
