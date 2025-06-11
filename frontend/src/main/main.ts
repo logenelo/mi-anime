@@ -38,9 +38,6 @@ let cornerWindow: BrowserWindow | null = null;
 const gotTheLock = app.requestSingleInstanceLock();
 
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  event.reply('ipc-example', arg);
-});
 
 if (!gotTheLock) {
   app.quit();
@@ -268,6 +265,17 @@ if (!gotTheLock) {
       }
     });
   };
+
+  ipcMain.on('ipc-example', async (event, arg) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    } else {
+      createWindow();
+    }
+    event.reply('ipc-example', arg);
+  });
 
   app.whenReady().then(() => {
     createWindow();
