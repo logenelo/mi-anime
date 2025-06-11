@@ -60,14 +60,14 @@ const Corner = () => {
               key={anime.id}
               onClick={() => {
                 window.electron.ipcRenderer.sendMessage(
-                  'ipc-example',
+                  'sendId',
                   anime.id,
                 );
               }}
               sx={{
                 textDecoration: 'none',
                 color: 'inherit',
-                '&:hover': { fontWeight: 'bold' },
+                '&:hover': { fontWeight: 'bold', cursor:'pointer' },
               }}
             >
               {anime.title}

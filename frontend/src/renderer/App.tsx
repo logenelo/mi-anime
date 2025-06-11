@@ -57,8 +57,6 @@ export const useDarkMode = (): [
 const App: React.FC = () => {
   const [themeMode, themeColor, themeToggler, colorToggler] = useDarkMode();
   const theme = getTheme(themeMode, themeColor, themeToggler, colorToggler);
-
-  const detail = React.useContext(AnimeDetailContext);
   const [route, setRoute] = React.useState<string>('/');
   const routes: Record<string, JSX.Element> = {
     '/': <Home />,
@@ -73,18 +71,14 @@ const App: React.FC = () => {
   const MainPage = () => {
     return routes?.[route] || routes['/'];
   };
+   
   React.useEffect(() => {
     if (!Object.keys(routes).includes(route)) {
       setRoute('/');
     }
   }, [route]);
 
-  React.useEffect(() => {
-    window.electron.ipcRenderer.once('ipc-example', (arg) => {
-      console.log(arg);
-      detail.handleOpen(arg as string);
-    });
-  });
+  
   return (
     <DetailProvider>
       <ThemeProvider theme={theme}>

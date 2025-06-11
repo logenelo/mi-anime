@@ -3,11 +3,9 @@ import { Box, Container, useTheme } from '@mui/material';
 import BottomNavBar from './BottomNavBar';
 import DefaultBG from '../../../assets/background/background-1.jpg';
 import AnimeDetailDrawer from './AnimeDetailDrawer';
-import { animesCrawler } from '../services/animeHelper';
-import { addAnimes, crawlAnimes, deleteAnime, fetchUrl } from '../services/api';
-import * as cheerio from 'cheerio';
-import { Route } from 'react-router-dom';
+
 import RouterContext from '../contexts/RouterContext';
+import AnimeDetailContext from '../contexts/AnimeDetailContext';
 
 type MainProps = {
   children: React.ReactNode;
@@ -138,6 +136,17 @@ const Main: React.FC<MainProps> = ({ children }) => {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+
+  const detail = React.useContext(AnimeDetailContext);
+  React.useEffect(()=>{
+    window.electron.ipcRenderer.on('replyId', (arg) => {
+      console.log(arg)
+      detail.handleOpen(arg as string);
+    });
+  
+  },[])
+ 
 
   return (
     <>

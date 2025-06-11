@@ -7,6 +7,7 @@ import {
   Tray,
   Menu,
   screen,
+  ipcRenderer,
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -37,6 +38,7 @@ let cornerWindow: BrowserWindow | null = null;
 
 const gotTheLock = app.requestSingleInstanceLock();
 
+let dataQueue: any[] = []; // Queue to hold data
 
 
 if (!gotTheLock) {
@@ -142,8 +144,16 @@ if (!gotTheLock) {
     });
 
     mainWindow.on('closed', () => {
-      mainWindow?.hide();
-    });
+      mainWindow = null    
+    })
+
+    mainWindow.webContents.on('did-finish-load',()=>{
+      console.log(dataQueue)
+     while (dataQueue.length > 0) {
+        const data = dataQueue.shift();
+        mainWindow?.webContents.send('replyId', data);        
+      }
+    })
 
     const menuBuilder = new MenuBuilder(mainWindow);
     menuBuilder.buildMenu();
@@ -266,16 +276,17 @@ if (!gotTheLock) {
     });
   };
 
-  ipcMain.on('ipc-example', async (event, arg) => {
+  ipcMain.on('sendId', async (event, arg) => {
     if (mainWindow) {
+      mainWindow.webContents.send('replyId', arg);        
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
     } else {
+      dataQueue.push(arg);
       createWindow();
     }
-    event.reply('ipc-example', arg);
-  });
+   });
 
   app.whenReady().then(() => {
     createWindow();
