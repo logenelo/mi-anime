@@ -11,33 +11,21 @@ import {
 	crawlSeasonAnimes,
 	getAnimeById,
 	deleteAnimes,
-	animesCrawler,
 	addAnimes,
 	getCrawlAnimes,
 } from './handlers/anime';
-import {
-	fetchUrl,
-	test
-} from './handlers/handlers';
-import {
-	HtmlParser
-} from './handlers/parser';
-
-
-
+import { fetchUrl, test } from './handlers/handlers';
 
 export interface Env {
 	ANIME: KVNamespace;
 }
 
 const router = new Router();
-
 router
 	.get('/anime', listAnimes)
 	.get('/anime/fetch', fetchUrl)
 	.get('/anime/get/:year/:season', getAnimesByYearAndSeason)
 	.get('/anime/get/:id', getAnimeById)
-	.get('/anime/test', test)
 	.post('/anime', createAnimes)
 	.post('/anime/crawl', crawlSeasonAnimes)
 	.post('/anime/ids', listAnimesByIds)
@@ -50,12 +38,12 @@ const getResponseBody = (req: Request, resp: Response) => {
 	if (req.url.includes('/anime/fetch')) {
 		return resp.text();
 	} else {
-		return resp.json < Record < string, any >> ();
+		return resp.json<Record<string, any>>();
 	}
 }
 
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise < Response > {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		try {
 			if (request.method !== 'GET') {
 				return await router.handle(request, env, ctx);

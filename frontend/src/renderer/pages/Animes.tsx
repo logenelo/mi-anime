@@ -13,22 +13,16 @@ import {
 } from '@mui/material';
 import AnimeCard from '../components/AnimeCard';
 import { Anime, Season, SEASONS } from '../types/anime';
-import {
-  addAnimes,
-  getAllAnimes,
-  getAnimesByYearAndSeason,
-} from '../services/api';
+import { getAllAnimes, getAnimesByYearAndSeason } from '../services/api';
 import { Search } from '@mui/icons-material';
 import Loading from '../components/Loading';
 import useElementOnScreen from '../hooks/useElementOnScreen';
 import useDebounce from '../hooks/useDebounce';
-import { animesCrawler, getSeasonCode } from '../services/animeHelper';
-import { DateTime } from 'luxon';
 
 const PAGE_SIZE = 60;
 
 const CURRENT_YEAR = new Date().getFullYear();
-const START_YEAR = 2020;
+const START_YEAR = 2017;
 const YEARS = Array.from(
   { length: CURRENT_YEAR + 1 - START_YEAR },
   (_, i) => START_YEAR + i,
