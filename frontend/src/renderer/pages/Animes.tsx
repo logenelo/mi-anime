@@ -142,33 +142,33 @@ const Animes: React.FC = () => {
         const resp = await fetchAnimes(temp);
         if (resp.finish) {
           setLoading(false);
-          if (!lastUpdateTime) {
-            const lastUpdateTime = resp.lastUpdateTime;
-            const now = DateTime.now();
-            if (now.toMillis() - lastUpdateTime > 24 * 60 * 60 * 1000) {
-              const nowSeason = getSeasonCode(now.toJSDate());
-              const nextMonth = now.plus({ month: 1 });
-              const nextSeason = getSeasonCode(nextMonth.toJSDate());
-              animesCrawler(nowSeason[0], nowSeason[1]).then((animes) => {
-                if (animes && animes.length > 0) {
-                  addAnimes(animes);
-                }
-              });
+          // if (!lastUpdateTime) {
+          //   const lastUpdateTime = resp.lastUpdateTime;
+          //   const now = DateTime.now();
+          //   if (now.toMillis() - lastUpdateTime > 24 * 60 * 60 * 1000) {
+          //     const nowSeason = getSeasonCode(now.toJSDate());
+          //     const nextMonth = now.plus({ month: 1 });
+          //     const nextSeason = getSeasonCode(nextMonth.toJSDate());
+          //     animesCrawler(nowSeason[0], nowSeason[1]).then((animes) => {
+          //       if (animes && animes.length > 0) {
+          //         addAnimes(animes);
+          //       }
+          //     });
 
-              if (
-                nowSeason[0] !== nextSeason[0] ||
-                nowSeason[1] !== nextSeason[1]
-              ) {
-                animesCrawler(nextSeason[0], nextSeason[1]).then(
-                  (nextAnimes) => {
-                    if (nextAnimes && nextAnimes.length > 0) {
-                      addAnimes(nextAnimes);
-                    }
-                  },
-                ); //Next Season
-              }
-            }
-          }
+          //     if (
+          //       nowSeason[0] !== nextSeason[0] ||
+          //       nowSeason[1] !== nextSeason[1]
+          //     ) {
+          //       animesCrawler(nextSeason[0], nextSeason[1]).then(
+          //         (nextAnimes) => {
+          //           if (nextAnimes && nextAnimes.length > 0) {
+          //             addAnimes(nextAnimes);
+          //           }
+          //         },
+          //       ); //Next Season
+          //     }
+          //   }
+          // }
           return;
         } else {
           temp = resp.cursor;

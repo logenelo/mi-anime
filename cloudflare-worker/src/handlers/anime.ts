@@ -1,4 +1,5 @@
 import type { Env } from '../index';
+import { HtmlParser } from './parser';
 
 interface AnimeData {
 	id: string;
@@ -16,6 +17,7 @@ interface AnimeMetadata {
 	year: number;
 	season: number;
 }
+
 export const animesCrawler = async (year: number, season: number) => {
 	const seasonMap: Record<number, string> = {
 		1: '01', // Winter
@@ -40,9 +42,95 @@ export const animesCrawler = async (year: number, season: number) => {
 		return html;
 	} catch (error) {
 		console.error('Crawler error:', error);
-		return [];
+		return '';
 	}
 };
+export const getCrawlAnimes = async (year: number, season: number) => {
+	const html = await animesCrawler(year, season);
+
+	const parser = new HtmlParser(html);
+	const icons = parser.getElementById('acgs-anime-icons')?.getElementsByClassName('acgs-card') || [];
+
+	const animes = icons.map(async(icon) => {
+		const id = icon.getAttribute('acgs-bangumi-data-id')
+		const dateToday = icon.getAttribute('datetoday');
+
+		const weekdayLabel = icon.getAttribute('weektoday') as string;
+		const startDate = Number(icon.getAttribute('onairtime'));
+
+		const card = parser.getElementById('acgs-anime-list')?.getElementsByAttribute("acgs-bangumi-anime-id", id)[0];
+		if (!card) return;
+		const title = card.getElementsByClassName('entity_localized_name')[0].text().trim();
+		if (!title) return;
+
+		const descriptionElement = card.getElementsByClassName('anime_story');
+		const description = descriptionElement.length ? descriptionElement[0].text().trim() : '';
+		const weekday = ['日','一','二','三','四','五','六'].indexOf(weekdayLabel) || 0;
+
+		const cover = card.getElementsByClassName('anime_cover_image')[0].getElementsByTagName('img')[0]?.getAttribute('src') || '';
+		const platforms = card.getElementsByClassName('steam-site-item')
+			.map((item, i) => {
+				const siteElement = item.getElementsByClassName('stream-site')[0];
+				let href = siteElement.getAttribute('href') || '';
+				const site = item.getElementsByClassName('steam-site-name')[0].text().trim();
+				if (!href) {
+					const sitesMap: Record < string, string > = {
+						巴哈姆特動畫瘋: 'https://ani.gamer.com.tw/search.php?keyword=' + title,
+						愛奇藝: `https://www.iq.com/search?query=${title}&originInput=`,
+						Netflix: `https://www.netflix.com/search?q=${title}`,
+					};
+					href = sitesMap[site] || '';
+				}
+				return {
+					value: site,
+					href: href,
+					region: siteElement.getAttribute('site-area') || '',
+				};
+			})
+			.filter((p) => p.value); // Filter
+		const linkElememt = card.getElementsByTagName('a').filter((item) => item.classList.includes('bgmtv'))[0];
+		const link = linkElememt ? linkElememt.getAttribute('href') : '';
+		const episode = link?
+			await fetch(link).then((res) => res.text()).then((html) => {
+				const parser = new HtmlParser(html);
+				const info = parser.getElementById('infobox');
+				const list =info?.getElementsByTagName('li');
+				const result = list?.find((item) => item.text().includes('话数'));
+				const episode = result ? parseInt(result.text().split(':')[1].trim()): NaN;
+				if (isNaN(episode)) {
+					const ul  = parser.getElementsByTagName('ul').find((item) => item.classList.includes('prg_list'));
+					const li = ul?.getElementsByTagName('li');
+					if (!li || li.length === 0) {
+						return dateToday === '跨季續播' ? 24 : 12; // Default to 12 episodes for seasonal anime
+					}
+					if (li && li.length > 0) {
+						const result = li[li.length - 1].text();
+						const episode = parseInt(result);
+						return episode ? episode : dateToday === '跨季續播' ? 24 : 12;
+					}
+				}else{
+					return episode;
+				}
+			})
+			: dateToday === '跨季續播' ? 24 : 12;
+
+		const newAnime: any = {
+			id: `${id?.split('-')[1]}`,
+			title,
+			description,
+			weekday,
+			startDate,
+			platform: platforms,
+			cover,
+			year: dateToday == '跨季續播' ? undefined : year,
+			season: dateToday == '跨季續播' ? undefined : season,
+			episode,
+		};
+		return newAnime
+	}).filter(anime => anime);
+	return Promise.all(animes);
+}
+
 
 export async function listAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const url = request.url;
@@ -186,17 +274,9 @@ export async function crawlSeasonAnimes(request: Request, env: Env, ctx: Executi
 	});
 }
 
-export async function createAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-	const req = await request.json<any>();
-	const newAnimes = req.animes;
-	if (!Array.isArray(newAnimes)) {
-		return new Response('Invalid body format', {
-			status: 400,
-		});
-	}
-
-	const results = await Promise.all(
-		newAnimes.map(async (anime) => {
+export const addAnimes = async (animes: AnimeData[], env: Env)=> {
+		const results = await Promise.all(
+		animes.map(async (anime) => {
 			// Check if anime already exists
 			if (anime.id) {
 				const existing = await env.ANIME.get('anime-'+anime.id);
@@ -229,7 +309,19 @@ export async function createAnimes(request: Request, env: Env, ctx: ExecutionCon
 			};
 		})
 	);
-	await env.ANIME.put('lastUpdateTime', new Date().getTime().toString());
+		await env.ANIME.put('lastUpdateTime', new Date().getTime().toString());
+		return results;
+}
+export async function createAnimes(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+	const req = await request.json<any>();
+	const newAnimes = req.animes;
+	if (!Array.isArray(newAnimes)) {
+		return new Response('Invalid body format', {
+			status: 400,
+		});
+	}
+
+	const results = await addAnimes(newAnimes, env);
 	const response = {
 		statusCode: 200,
 		animes: results,
