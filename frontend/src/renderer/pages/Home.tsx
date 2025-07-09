@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import AnimeList from '../components/AnimeList';
-import { deleteAllAnimes, deleteAnime, getSeasonAnimes } from '../services/api';
+import { getSeasonAnimes } from '../services/api';
 import { Anime } from '../types/anime';
 import Loading from '../components/Loading';
 import { getSeasonCode } from '../services/animeHelper';

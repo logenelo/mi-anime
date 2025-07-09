@@ -78,9 +78,9 @@ export const crawlAnimes = (year: number, season: Season) => {
   return postMethod(`${url}/crawl`, { year, season });
 };
 
-export const getAnimesByYearAndSeason = (year: number, season: Season) => {
+export const getAnimesByYearAndSeason = (year: number, season: Season, focus?:boolean) => {
   return getMethod(`${url}/get/${year}/${season}`).then(async (resp) => {
-    if (resp?.animes.length === 0) {
+    if (resp?.animes.length === 0 || focus ) {
       const animes = await animesCrawler(year, season);
 
       if (animes && animes.length > 0) {

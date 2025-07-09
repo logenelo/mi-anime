@@ -18,6 +18,8 @@ import { Search } from '@mui/icons-material';
 import Loading from '../components/Loading';
 import useElementOnScreen from '../hooks/useElementOnScreen';
 import useDebounce from '../hooks/useDebounce';
+import { start } from 'node:repl';
+import { dateFormater } from '../services/helper';
 
 const PAGE_SIZE = 60;
 
@@ -106,13 +108,23 @@ const Animes: React.FC = () => {
     }
     setAnimes((prev) => {
       const newAnimes = prev.concat(resp.animes);
+      let errorAnimes: any = {};
       if (resp.finish) {
-        return newAnimes.sort((a: Anime, b: Anime) => {
-          if (b.year !== a.year) {
-            return b.year - a.year; // Descending order for year
+        const sortedAnimes = newAnimes.sort((a: Anime, b: Anime) => {
+          const aCode = a.year * 100 + a.season || 0;
+          const bCode = b.year * 100 + b.season || 0;
+          if (aCode === 0) {
+            errorAnimes[a.id] = {
+              id: a.id,
+              title: a.title,
+              startDate: dateFormater(new Date(a.startDate)),
+            };
           }
-          return b.season - a.season; // Descending order for season
+
+          return bCode - aCode;
         });
+        console.log(errorAnimes);
+        return sortedAnimes;
       } else {
         return newAnimes;
       }
@@ -136,33 +148,6 @@ const Animes: React.FC = () => {
         const resp = await fetchAnimes(temp);
         if (resp.finish) {
           setLoading(false);
-          // if (!lastUpdateTime) {
-          //   const lastUpdateTime = resp.lastUpdateTime;
-          //   const now = DateTime.now();
-          //   if (now.toMillis() - lastUpdateTime > 24 * 60 * 60 * 1000) {
-          //     const nowSeason = getSeasonCode(now.toJSDate());
-          //     const nextMonth = now.plus({ month: 1 });
-          //     const nextSeason = getSeasonCode(nextMonth.toJSDate());
-          //     animesCrawler(nowSeason[0], nowSeason[1]).then((animes) => {
-          //       if (animes && animes.length > 0) {
-          //         addAnimes(animes);
-          //       }
-          //     });
-
-          //     if (
-          //       nowSeason[0] !== nextSeason[0] ||
-          //       nowSeason[1] !== nextSeason[1]
-          //     ) {
-          //       animesCrawler(nextSeason[0], nextSeason[1]).then(
-          //         (nextAnimes) => {
-          //           if (nextAnimes && nextAnimes.length > 0) {
-          //             addAnimes(nextAnimes);
-          //           }
-          //         },
-          //       ); //Next Season
-          //     }
-          //   }
-          // }
           return;
         } else {
           temp = resp.cursor;
@@ -193,9 +178,6 @@ const Animes: React.FC = () => {
       nextPage();
     }
   }, [isVisible]);
-  useEffect(() => {
-    console.log(animes);
-  }, [animes]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -286,3 +268,43 @@ const Animes: React.FC = () => {
 };
 
 export default Animes;
+
+/* Error
+{
+    "842": {
+        "id": "842",
+        "title": "魔物獵人 物語  RIDE ON",
+        "startDate": "2016-10-02"
+    },
+    "1414": {
+        "id": "1414",
+        "title": "ALL OUT!!",
+        "startDate": "2016-10-06"
+    },
+    "1415": {
+        "id": "1415",
+        "title": "TRICKSTER – 江戶川亂步『少年偵探團』",
+        "startDate": "2016-10-04"
+    },
+    "1416": {
+        "id": "1416",
+        "title": "救難小英雄 24",
+        "startDate": "2016-10-01"
+    },
+    "1417": {
+        "id": "1417",
+        "title": "機動戰士GUNDAM 鐵血的孤兒 第二季",
+        "startDate": "2016-10-02"
+    },
+    "1419": {
+        "id": "1419",
+        "title": "Classicaloid",
+        "startDate": "2016-10-08"
+    },
+    "1420": {
+        "id": "1420",
+        "title": "三月的獅子",
+        "startDate": "2016-10-08"
+    }
+}
+*/
