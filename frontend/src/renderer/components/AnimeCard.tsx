@@ -4,6 +4,7 @@ import { weekdayColors, type Anime } from '../types/anime';
 import FavoriteButton from './FavoriteButton';
 import { dateFormater } from '../services/helper';
 import AnimeDetailContext from '../contexts/AnimeDetailContext';
+import { getPlatforms } from '../services/animeHelper';
 
 const WEEKDAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -109,21 +110,21 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
                 }}
               />
             </Stack>
+            <Box height={24} display={'flex'} alignItems="center">
+              <Typography variant="body2">
+                開播日期：{startDate} {anime?.isContin ? ' 跨季續播' : ''}
+              </Typography>
+            </Box>
 
-            <Typography variant="body2" gutterBottom>
-              開播日期：{startDate} {anime?.isContin ? ' 跨季續播' : ''}
-            </Typography>
-
-            <Stack direction="row" spacing={1} flexWrap={'wrap'} mb="0.35em">
+            <Stack
+              direction="row"
+              rowGap={'0.2em'}
+              columnGap={0.5}
+              flexWrap={'wrap'}
+              alignContent={'center'}
+            >
               <Typography variant="body2">播放平台：</Typography>
-              {[
-                ...anime.platform,
-                {
-                  value: '其他',
-                  href: 'https://anime1.me/?s=' + anime.title,
-                  region: 'HK',
-                },
-              ]
+              {getPlatforms(anime)
                 .filter((p) => p.region === 'HK')
                 .map((p) => (
                   <Chip
@@ -133,7 +134,6 @@ const AnimeCard: React.FC<AnimeCardProps> = ({ anime, variant = 'grid' }) => {
                     component="a"
                     clickable={Boolean(p.href)}
                     onClick={(e) => e.stopPropagation()}
-                    sx={{ pb: '0.35em' }}
                     {...(p.href && { href: p.href, target: '_blank' })}
                   />
                 ))}

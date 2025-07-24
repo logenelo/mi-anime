@@ -1,4 +1,4 @@
-interface Platform {
+export interface Platform {
   value: string;
   href: string;
   region: string;
@@ -11,6 +11,17 @@ export const SEASONS = [
   { value: 7, label: '夏季' }, // 7-9月
   { value: 10, label: '秋季' }, // 10-12月
 ];
+
+export const WEEKDAY_NAMES = [
+  '日',
+  '一',
+  '二',
+  '三',
+  '四',
+  '五',
+  '六',
+] as const;
+export type WeekdayNames = typeof WEEKDAY_NAMES[number];
 
 export const weekdayColors = [
   '#FF0000', // Red

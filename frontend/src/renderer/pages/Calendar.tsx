@@ -11,17 +11,21 @@ import { DateTime } from 'luxon';
 import { Circle } from '@mui/icons-material';
 import { getAnimeByIds } from '../services/api';
 import { Anime } from '../types/anime';
+import useFavoriteList from '../hooks/useFavouriteList';
+import AnimeDetailContext from '../contexts/AnimeDetailContext';
 
+interface HighlightData {
+  id: string;
+  title: string;
+  episode: number;
+  watched: boolean;
+}
 function ServerDay(props: PickersDayProps & { highlightedDays?: string[] }) {
   const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
   const isSelected =
     !props.outsideCurrentMonth &&
     highlightedDays.includes(day.toFormat('yyyy-MM-dd'));
-  console.log(highlightedDays, day.toFormat('yyyy-MM-dd'));
-  console.log(
-    !props.outsideCurrentMonth,
-    highlightedDays.includes(day.toFormat('yyyy-MM-dd')),
-  );
+
   return (
     <Badge
       key={props.day.toFormat('yyyy-MM-dd')}
@@ -43,12 +47,18 @@ function ServerDay(props: PickersDayProps & { highlightedDays?: string[] }) {
 
 const Calendar: React.FC = () => {
   const theme = useTheme();
+  const { isReady, getEpisodeWatched } = useFavoriteList();
+  const { handleOpen } = React.useContext(AnimeDetailContext);
 
   const [selectedDate, setSelectedDate] = useState(DateTime.now());
 
-  const [highlightData, setHighlightData] = useState<Record<string, any>>([]);
+  const [highlightData, setHighlightData] = useState<
+    Record<string, HighlightData[]>
+  >({});
   const highlightedDays = useMemo(() => {
-    return Object.keys(highlightData);
+    return Object.keys(highlightData).filter((key) => {
+      return highlightData[key].some((data: HighlightData) => !data.watched);
+    });
   }, [highlightData]);
   const favoriteIds: string[] = React.useMemo(() => {
     try {
@@ -66,6 +76,7 @@ const Calendar: React.FC = () => {
   };
 
   React.useEffect(() => {
+    if (!isReady) return;
     getAnimeByIds(favoriteIds)
       .then(async (resp) => {
         if (resp.statusCode === 200) {
@@ -76,13 +87,20 @@ const Calendar: React.FC = () => {
             const endDate = startDate.plus({
               weeks: Number(anime.episode) - 1,
             });
+
+            const watched = getEpisodeWatched(anime.id);
             let i = 1;
             for (
               let date = startDate;
               date <= endDate;
               date = date.plus({ weeks: 1 })
             ) {
-              const data = { title: anime.title, episode: i };
+              const data = {
+                id: anime.id,
+                title: anime.title,
+                episode: i,
+                watched: watched >= i,
+              };
               const key = date.toFormat('yyyy-MM-dd');
               if (highlightData[key]) {
                 highlightData[key].push(data);
@@ -98,7 +116,7 @@ const Calendar: React.FC = () => {
       .catch((error) => {
         console.error('Error fetching animes:', error);
       });
-  }, [favoriteIds]);
+  }, [favoriteIds, isReady]);
 
   return (
     <Box p={2}>
@@ -147,7 +165,15 @@ const Calendar: React.FC = () => {
           {(highlightData?.[selectedDate.toFormat('yyyy-MM-dd')] || []).map(
             (data: any) => (
               <Typography key={data.title + data.episode} variant="body1">
-                {data.title} 第 {data.episode} 集
+                <Box
+                  component={'span'}
+                  onClick={() => handleOpen(data.id)}
+                  color="primary.main"
+                  sx={{ cursor: 'pointer' }}
+                >
+                  {data.title}
+                </Box>{' '}
+                第 {data.episode} 集
               </Typography>
             ),
           )}

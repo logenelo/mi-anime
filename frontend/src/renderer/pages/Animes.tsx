@@ -191,11 +191,12 @@ const Animes: React.FC = () => {
         </Typography>
         <Stack
           direction="row"
-          spacing={2}
+          columnGap={2}
+          rowGap={1}
+          flexWrap="wrap"
           sx={{
             mb: 2,
             width: '100%',
-            maxWidth: 400,
           }}
         >
           <FormControl size="small" sx={{ minWidth: 120 }}>
@@ -229,7 +230,11 @@ const Animes: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: 300 }}>
+          <FormControl
+            size="small"
+            fullWidth
+            sx={{ minWidth: 240, maxWidth: 300 }}
+          >
             <OutlinedInput
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}

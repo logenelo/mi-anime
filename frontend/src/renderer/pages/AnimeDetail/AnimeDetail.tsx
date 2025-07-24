@@ -1,10 +1,15 @@
 import React, { useMemo } from 'react';
 import { Box, Typography, Card, Chip, Stack, Grid, Alert } from '@mui/material';
 import { getAnimeById } from '../../services/api';
-import { Anime, SEASONS, weekdayColors } from '../../types/anime';
+import {
+  Anime,
+  SEASONS,
+  WEEKDAY_NAMES,
+  weekdayColors,
+} from '../../types/anime';
 import useFavoriteList from '../../hooks/useFavouriteList';
 import { dateFormater } from '../../services/helper';
-import { getEpisodeCount, WEEKDAY_NAMES } from '../../services/animeHelper';
+import { getEpisodeCount, getPlatforms } from '../../services/animeHelper';
 import Loading from '../../components/Loading';
 
 const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
@@ -74,14 +79,15 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
   return (
     <>
       <Grid container>
-        <Grid size={'auto'} sx={{ position: 'relative' }}>
+        <Grid size={{ xs: 12, sm: 'auto' }} sx={{ position: 'relative' }}>
           <Card
             sx={{
               display: 'flex',
               position: 'sticky',
               top: 0,
               left: 0,
-              width: 300,
+              width: { xs: '100%', sm: 300 },
+              height: { xs: 300, sm: '100%' },
             }}
           >
             <Box
@@ -89,7 +95,10 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
               src={anime.cover}
               alt={anime.title}
               width={1}
-              sx={{ objectFit: 'contain' }}
+              sx={{
+                objectFit: { xs: 'cover', sm: 'contain' },
+                objectPosition: { xs: 'center', sm: 'top' },
+              }}
             />
           </Card>
         </Grid>
@@ -104,7 +113,7 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
           <Typography variant="body1" gutterBottom>
             開播日期：{startDate}
           </Typography>
-          <Stack direction="row" spacing={1} mb={'0.35em'}>
+          <Stack direction="row">
             <Typography variant="body1" gutterBottom>
               播出星期：
             </Typography>
@@ -118,18 +127,14 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
             />
           </Stack>
 
-          <Stack direction="row" spacing={1} flexWrap={'wrap'}>
-            <Typography variant="body1" sx={{ pb: '0.35em' }}>
-              播放平台：
-            </Typography>
-            {[
-              ...anime.platform,
-              {
-                value: '其他',
-                href: 'https://anime1.me/?s=' + anime.title,
-                region: 'HK',
-              },
-            ]
+          <Stack
+            direction="row"
+            rowGap={'0.35em'}
+            columnGap={1}
+            flexWrap={'wrap'}
+          >
+            <Typography variant="body1">播放平台：</Typography>
+            {getPlatforms(anime)
               .filter((p) => p.region === 'HK')
               .map((p) => (
                 <Chip
@@ -138,7 +143,6 @@ const AnimeDetail: React.FC<{ id: string }> = ({ id }) => {
                   label={p.value}
                   component="a"
                   clickable={Boolean(p.href)}
-                  sx={{ pb: '0.35em' }}
                   {...(p.href && { href: p.href, target: '_blank' })}
                 />
               ))}

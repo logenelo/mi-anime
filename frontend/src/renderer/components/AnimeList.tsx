@@ -11,8 +11,7 @@ import {
 import GridViewIcon from '@mui/icons-material/GridView';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import AnimeCard from './AnimeCard';
-import { type Anime } from '../types/anime';
-import { WEEKDAY_NAMES } from '../services/animeHelper';
+import { WEEKDAY_NAMES, type Anime } from '../types/anime';
 import useCustomSetting from '../hooks/useCustomSetting';
 import { Layout } from '../types/setting';
 
@@ -33,8 +32,6 @@ const toggleButtonStyles = {
     },
   },
 };
-
-// 每個星期的顏色
 
 const AnimeList: React.FC<Props> = ({ animeList }) => {
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
@@ -103,11 +100,13 @@ const AnimeList: React.FC<Props> = ({ animeList }) => {
   return (
     <Box sx={{ py: 2 }}>
       {/* Filter and Layout Controls */}
-      <Stack direction="column" spacing={2} sx={{ mb: 2 }}>
+      <Stack direction="column" sx={{ mb: 2 }}>
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="flex-end"
+          flexWrap="wrap-reverse"
+          gap={1}
         >
           <ToggleButtonGroup
             value={selectedWeekday}

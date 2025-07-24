@@ -6,7 +6,6 @@ import { Anime } from '../types/anime';
 import Loading from '../components/Loading';
 import { getSeasonCode } from '../services/animeHelper';
 const Home: React.FC = () => {
-  // 範例動畫資料
   const [animeList, setAnimeList] = React.useState<Anime[]>([]);
   const [loading, setLoading] = React.useState(false);
 

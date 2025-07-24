@@ -16,7 +16,7 @@ import {
 import { Anime } from '../types/anime';
 import Loading from '..//components/Loading';
 import { getAnimeByIds } from '../services/api';
-import { getEpisodeCount } from '../services/animeHelper';
+import { getEpisodeCount, getPlatforms } from '../services/animeHelper';
 import React, { memo, useMemo } from 'react';
 import useFavoriteList from '../hooks/useFavouriteList';
 
@@ -38,15 +38,10 @@ const Corner = () => {
 
   const AnimeItem = memo(({ anime }: { anime: Anime }) => {
     const [expanded, setExpanded] = React.useState(false);
-    const platforms = anime.platform
-      .filter((item) => item.region === 'HK' && item.href)
-      .concat([
-        {
-          value: '其他',
-          href: 'https://anime1.me/?s=' + anime.title,
-          region: 'HK',
-        },
-      ]);
+    const platforms = getPlatforms(anime).filter(
+      (item) => item.region === 'HK' && item.href,
+    );
+
     return (
       <>
         <Box
@@ -59,15 +54,12 @@ const Corner = () => {
               variant="h6"
               key={anime.id}
               onClick={() => {
-                window.electron.ipcRenderer.sendMessage(
-                  'sendId',
-                  anime.id,
-                );
+                window.electron.ipcRenderer.sendMessage('sendId', anime.id);
               }}
               sx={{
                 textDecoration: 'none',
                 color: 'inherit',
-                '&:hover': { fontWeight: 'bold', cursor:'pointer' },
+                '&:hover': { fontWeight: 'bold', cursor: 'pointer' },
               }}
             >
               {anime.title}

@@ -41,9 +41,11 @@ const Favorites: React.FC = () => {
   const selectOptions = React.useMemo(() => {
     const options = new Set<string>();
     favoriteAnime.forEach((anime) => {
-      const newOption =
-        anime.year + '' + anime.season.toString().padStart(2, '0');
-      options.add(newOption);
+      if (anime?.year && anime?.season) {
+        const seasonCode =
+          anime.year + '' + anime.season.toString().padStart(2, '0');
+        options.add(seasonCode);
+      }
     });
     return Array.from(options);
   }, [favoriteAnime]);

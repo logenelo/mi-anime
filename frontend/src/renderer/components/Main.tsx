@@ -137,16 +137,13 @@ const Main: React.FC<MainProps> = ({ children }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-
   const detail = React.useContext(AnimeDetailContext);
-  React.useEffect(()=>{
+  React.useEffect(() => {
     window.electron.ipcRenderer.on('replyId', (arg) => {
-      console.log(arg)
+      console.log(arg);
       detail.handleOpen(arg as string);
     });
-  
-  },[])
- 
+  }, []);
 
   return (
     <>
@@ -175,8 +172,6 @@ const Main: React.FC<MainProps> = ({ children }) => {
           width: '100%',
           height: '100vh',
           overflow: 'hidden',
-
-          scrollbarColor: `${theme.palette.primary.dark} ${theme.palette.background.default} `,
         }}
       >
         <Box

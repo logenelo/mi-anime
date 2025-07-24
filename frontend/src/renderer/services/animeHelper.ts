@@ -1,18 +1,9 @@
 /* eslint-disable import/prefer-default-export */
 import * as cheerio from 'cheerio';
-import { Anime, Season } from '../types/anime';
+import { Anime, Platform, Season, WEEKDAY_NAMES, WeekdayNames } from '../types/anime';
 import { crawlAnimes, fetchUrl } from './api';
 
-export const WEEKDAY_NAMES = [
-  '日',
-  '一',
-  '二',
-  '三',
-  '四',
-  '五',
-  '六',
-] as const;
-type WeekdayNames = (typeof WEEKDAY_NAMES)[number];
+
 
 export const getWeekdayLabel = (day: number) => {
   return WEEKDAY_NAMES[day];
@@ -148,3 +139,14 @@ export const getSeasonCode = (date: Date): [number, Season] => {
 
   return [currentYear, currentSeason];
 };
+
+export const getPlatforms = (anime: Anime): Platform[] => {
+ return [
+   ...anime.platform,
+   {
+     value: 'anime1',
+     href: 'https://anime1.me/?s=' + anime.title,
+     region: 'HK',
+   },
+ ];
+}
